@@ -1,0 +1,9 @@
+# private
+work-docs/
+.ignore
+
+# agent files
+AGENTS.md
+CLAUDE.md
+.claude/
+.agents/
