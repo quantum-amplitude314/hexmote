@@ -1,8 +1,11 @@
 import { evictDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
+import { emptyCanvasView, replayCanvasView } from "@hexmote/domain";
 import {
   canvasCreated,
   cellA,
+  cellOutside,
+  cellPainted,
   cooldownMs,
   createCanvas,
   paintCell,
@@ -55,5 +58,54 @@ describe("Canvas Durable Object", () => {
       status: "rejected",
       rejection: { reason: "cooldown", retryAt: t + cooldownMs },
     });
+  });
+});
+
+describe("Canvas read model", () => {
+  const paintedA = cellPainted({ cell: cellA, color: red });
+
+  test("shows an empty view before the canvas exists", async () => {
+    const canvas = env.CANVAS.get(newCanvasId());
+
+    expect(await canvas.getView()).toEqual(emptyCanvasView);
+  });
+
+  test("shows the view projected from its events", async () => {
+    const canvas = env.CANVAS.get(newCanvasId());
+    await canvas.handleCommand(createCanvas);
+    await canvas.handleCommand(paintCell({ cell: cellA, color: red }));
+
+    expect(await canvas.getView()).toEqual(replayCanvasView([canvasCreated, paintedA]));
+  });
+
+  test("updates the view with the events of each accepted command", async () => {
+    const canvas = env.CANVAS.get(newCanvasId());
+    await canvas.handleCommand(createCanvas);
+    await canvas.getView();
+
+    await canvas.handleCommand(paintCell({ cell: cellA, color: red }));
+
+    expect(await canvas.getView()).toEqual(replayCanvasView([canvasCreated, paintedA]));
+  });
+
+  test("leaves the view unchanged after a rejected command", async () => {
+    const canvas = env.CANVAS.get(newCanvasId());
+    await canvas.handleCommand(createCanvas);
+    await canvas.getView();
+
+    await canvas.handleCommand(paintCell({ cell: cellOutside, color: red }));
+
+    expect(await canvas.getView()).toEqual(replayCanvasView([canvasCreated]));
+  });
+
+  test("rebuilds the view after eviction", async () => {
+    const id = newCanvasId();
+    await env.CANVAS.get(id).handleCommand(createCanvas);
+    await env.CANVAS.get(id).handleCommand(paintCell({ cell: cellA, color: red }));
+    await evictDurableObject(env.CANVAS.get(id));
+
+    const view = await env.CANVAS.get(id).getView();
+
+    expect(view).toEqual(replayCanvasView([canvasCreated, paintedA]));
   });
 });

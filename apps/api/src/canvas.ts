@@ -1,6 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { handleCommand } from "@hexmote/application";
-import type { CanvasCommand } from "@hexmote/domain";
+import type { CanvasCommand, CanvasView } from "@hexmote/domain";
+import { notImplemented } from "./not-implemented.ts";
 import { createSqliteEventStore } from "./sqlite-event-store.ts";
 
 /** RPC reaches prototype methods only, so handlers are class methods, not arrow-function fields. */
@@ -16,5 +17,9 @@ export class Canvas extends DurableObject<Env> {
     });
 
     return decision;
+  }
+
+  async getView(): Promise<CanvasView> {
+    return notImplemented();
   }
 }

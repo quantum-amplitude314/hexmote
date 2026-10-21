@@ -40,6 +40,14 @@ command → handleCommand: read events → replay → decide → append if accep
 - The canvas Durable Object exposes `handleCommand(command)` over RPC through the `CANVAS` binding
 - Cooldown comes from the `COOLDOWN_MS` var
 
+## Read model
+
+- `getView()` over RPC returns the `CanvasView`
+- Kept in memory: replayed from the stream on the first read, then updated with the events of
+  each accepted command; rebuilt the same way after eviction
+- Updated in the same Durable Object right after the append, so it is never behind the stream;
+  projections in other stores (D1, later) are eventually consistent
+
 ## Event store
 
 - Port `EventStore`: `read() → { events, version }` and `append({ events, expectedVersion })`
