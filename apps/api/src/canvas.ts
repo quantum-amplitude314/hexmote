@@ -79,7 +79,6 @@ export class Canvas extends DurableObject<Env> {
     return deleted;
   }
 
-  /** A new round: the same emote on a blank canvas; the old round's events are gone. */
   async resetCanvas() {
     const {
       events: [created],
@@ -134,10 +133,9 @@ export class Canvas extends DurableObject<Env> {
     return freezes.includes("budget");
   }
 
-  /** Also clears the alarm. */
   async #wipe() {
+    // deleteAll also drops the alarm and the events table; the new store creates the table again.
     await this.ctx.storage.deleteAll();
-    // deleteAll drops the events table too; the new store creates it again.
     this.#store = createSqliteEventStore(this.ctx.storage);
     this.#view = null;
   }
@@ -168,7 +166,6 @@ export class Canvas extends DurableObject<Env> {
     for (const socket of this.#openSockets(leaving)) this.#send({ socket, message });
   }
 
-  /** By name; a session with several tabs is listed once. */
   #broadcastPresence(leaving?: WebSocket) {
     const sessionIds = new Set(
       this.#openSockets(leaving).map(

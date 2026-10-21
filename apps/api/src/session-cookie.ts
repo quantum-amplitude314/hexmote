@@ -6,7 +6,6 @@ const sessionCookieName = "hexmote-session";
 const sessionMaxAgeSeconds = 60 * 60 * 24 * 30;
 const sessionIdSchema = z.uuid();
 
-/** HMAC-signed, so a visitor cannot mint session ids to skip the cooldown. */
 export const sessionCookieFor = ({
   sessionId,
   signingKey,
@@ -21,7 +20,6 @@ export const sessionCookieFor = ({
     maxAge: sessionMaxAgeSeconds,
   });
 
-/** `null` without a cookie, with a bad signature, or with a value that is not a session id. */
 export const sessionIdOf = async ({
   context,
   signingKey,

@@ -2,7 +2,6 @@ import type { CanvasView, Cell, HexCodeColor } from "@hexmote/domain";
 
 export type PublicCanvasView = Omit<CanvasView, "freezes">;
 
-/** A session's public face: a name like "Blue Fox"; the session id stays on the server. */
 export type Painter = { name: string; color: HexCodeColor };
 
 export type LiveMessage =
@@ -18,6 +17,6 @@ export type LiveMessage =
     }
   | { type: "status"; status: CanvasView["status"]; resetAt: CanvasView["resetAt"] };
 
-/** Heartbeat frames: plain text, not a `LiveMessage`; answered without waking the Canvas. */
+/** Plain-text heartbeat frames, outside `LiveMessage`. */
 export const livePing = "ping";
 export const livePong = "pong";

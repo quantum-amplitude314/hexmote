@@ -8,7 +8,6 @@ import type {
   FreezeReason,
 } from "./events.ts";
 
-/** What `decide` needs to enforce the rules; the read model is `CanvasView`. */
 export type CanvasState =
   | { status: "none" }
   | {

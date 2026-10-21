@@ -8,7 +8,6 @@ export const passingTurnstileToken = "passing-token";
 
 const verifyTurnstile: VerifyTurnstile = async ({ token }) => token === passingTurnstileToken;
 
-/** `name=value`, as the browser sends it back. */
 export const signedSessionCookie = async (sessionId: string) => {
   const setCookie = await sessionCookieFor({ sessionId, signingKey: env.SESSION_SIGNING_KEY });
   const [cookie = ""] = setCookie.split(";");

@@ -6,7 +6,6 @@ import { Turnstile } from "./turnstile";
 
 const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
-/** The canvas connects only with a session, so every viewer has a painter name. */
 export function SessionGate({ children }: { children: ReactNode }) {
   const { session, startSession, fail } = useSession();
   if (session.status === "ready") return children;

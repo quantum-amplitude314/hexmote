@@ -13,7 +13,7 @@ const pingEveryMs = 25_000;
 export const reconnectDelayMs = (attempt: number) =>
   Math.min(firstReconnectDelayMs * 2 ** attempt, maxReconnectDelayMs);
 
-/** Reconnects after a drop; a socket that misses a pong counts as dropped, since a dead network may never close it. */
+/** A missed pong counts as a drop: a dead network may never close the socket. */
 export const openLiveConnection: OpenLiveConnection = ({ url, onMessage, onDisconnect }) => {
   let socket: WebSocket | null = null;
   let failedAttempts = 0;

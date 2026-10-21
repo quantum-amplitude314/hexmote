@@ -37,7 +37,6 @@ const paintedPercentOf = (cells: CanvasViewCell[]) => {
   return paintedPercent;
 };
 
-/** A freeze shows over completion: the next round waits while the canvas is frozen. */
 const statusOf = ({ freezes, resetAt }: Pick<CanvasView, "freezes" | "resetAt">) => {
   if (freezes.length > 0) return "frozen";
   const status: CanvasView["status"] = resetAt === null ? "open" : "completed";

@@ -19,13 +19,11 @@ browser ⇄ /live web Worker entry     ─service binding─▶ API Worker      
 admin   ──▶ /admin web Worker entry  ─service binding─▶ API Worker              ─RPC─▶ Canvas Durable Object
 ```
 
-The API Worker has no public URL (`workers_dev` and `preview_urls` off). `/api` and `/live` stay on
-the web host, so the session cookie is first-party and no CORS is needed. `next dev` has no web
-Worker: it rewrites `/api` to the API, and the browser opens `/live` on the API directly.
+The API Worker has no public URL. `/api` and `/live` stay on the web host: first-party cookie, no
+CORS. `next dev` has no web Worker: it rewrites `/api` to the API, and `/live` goes to the API directly.
 
-Session: the page asks `GET /api/session` who you are; without a session, Turnstile runs and
-`POST /api/session` sets a signed cookie. `/live` and painting need that session, so every viewer
-has a painter name.
+Session: `GET /api/session` says who you are; without a session, Turnstile runs and
+`POST /api/session` sets a signed cookie. `/live` and painting need it.
 
 ## Layers
 
@@ -49,18 +47,17 @@ One canvas = one Durable Object = one event stream.
 - Read model: `CanvasView` in memory, updated right after each append, so never behind the stream
 - `/live`: hibernatable WebSockets; on connect a snapshot and a welcome with the viewer's painter
   name, then one message per event; session ids and freeze reasons stay inside
-- Heartbeat: the page sends `ping` every 25 s and the runtime answers `pong` without waking the
-  Canvas; after a drop or a missed pong the page reconnects (1 s, doubling to 30 s) and gets a fresh
-  snapshot
-- Presence: the online list goes to everyone when someone joins or leaves; it comes from the open
-  WebSockets, not from events, so it is never stored
+- Heartbeat: `ping` every 25 s, answered by the runtime without waking the Canvas; after a drop or a
+  missed pong the page reconnects (1 s, doubling to 30 s) and gets a fresh snapshot
+- Presence: from the open WebSockets, not from events, so it is never stored
 - Rounds: `CanvasCompleted` sets an alarm at `resetAt`; the alarm wipes the stream and records the
-  old `CanvasCreated` again, so viewers get a blank snapshot; during a budget freeze it retries hourly
+  old `CanvasCreated` again; during a budget freeze it retries hourly
 
 ## Testing
 
-`bun test` for domain, application, template and the web's pure functions (hex geometry, live
-view); Vitest in workerd (`@cloudflare/vitest-plugin`) for the api, against the real Durable Object.
+`bun test` for domain, application, template and the web's pure modules (fake timers for the live
+connection); Vitest in workerd (`@cloudflare/vitest-plugin`) for the api, against the real Durable
+Object. Components are checked in the browser.
 
 ## Template
 

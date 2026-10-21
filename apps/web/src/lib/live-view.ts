@@ -19,7 +19,6 @@ export const emptyLiveState: LiveState = {
   connected: false,
 };
 
-/** A message from the server, or the client noticing the connection dropped. */
 export type LiveUpdate = LiveMessage | { type: "disconnected" };
 
 type ApplyLiveUpdate = (input: { state: LiveState; update: LiveUpdate }) => LiveState;
@@ -48,7 +47,7 @@ const paintedView = ({
   return painted;
 };
 
-/** Only other people's paints pulse; ids keep each pulse its own animation. */
+// Ids keep each pulse its own animation.
 const withRecentPaint = ({ state, message }: { state: LiveState; message: CellPaintedMessage }) => {
   const { cell, painter } = message;
   const { you, recentPaints } = state;

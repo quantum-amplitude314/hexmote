@@ -2,8 +2,7 @@ import type { Painter } from "@hexmote/contracts";
 
 type NonEmpty<Item> = readonly [Item, ...Item[]];
 
-// The palette without white and silver: names are shown in their colour on a white page.
-const colors: NonEmpty<Painter> = [
+const readableColors: NonEmpty<Painter> = [
   { name: "Grey", color: "#888888" },
   { name: "Black", color: "#222222" },
   { name: "Pink", color: "#ffa7d1" },
@@ -47,8 +46,7 @@ const animals: NonEmpty<string> = [
   "Heron",
 ];
 
-/** FNV-1a: the same session always hashes to the same name. */
-const hashOf = (text: string) => {
+const fnv1aHashOf = (text: string) => {
   let hash = 0x811c9dc5;
   for (const character of text) {
     hash = Math.imul(hash ^ (character.codePointAt(0) ?? 0), 0x01000193);
@@ -62,9 +60,9 @@ const pick = <Item>({ items, index }: { items: NonEmpty<Item>; index: number }) 
   items[index % items.length] ?? items[0];
 
 export const painterOf = (sessionId: string) => {
-  const hash = hashOf(sessionId);
-  const { name: colorName, color } = pick({ items: colors, index: hash });
-  const animal = pick({ items: animals, index: Math.floor(hash / colors.length) });
+  const hash = fnv1aHashOf(sessionId);
+  const { name: colorName, color } = pick({ items: readableColors, index: hash });
+  const animal = pick({ items: animals, index: Math.floor(hash / readableColors.length) });
   const painter: Painter = { name: `${colorName} ${animal}`, color };
 
   return painter;

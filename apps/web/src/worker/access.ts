@@ -15,7 +15,6 @@ type HasAdminAccess = (input: {
 const accessTokenHeader = "Cf-Access-Jwt-Assertion";
 const accessSigningAlgorithms = ["RS256"];
 
-/** Cloudflare Access signs in at the edge; the Worker checks the token it forwards. */
 export const hasAdminAccess: HasAdminAccess = async ({ request, env, accessKeys }) => {
   const { ACCESS_TEAM_DOMAIN: issuer, ACCESS_AUD: audience, SKIP_ACCESS_CHECK } = env;
   if (SKIP_ACCESS_CHECK === "true") return true;

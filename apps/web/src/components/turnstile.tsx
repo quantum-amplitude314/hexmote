@@ -21,7 +21,6 @@ declare global {
 
 type TurnstileProps = { siteKey: string; onToken: (token: string) => void; onError: () => void };
 
-/** Invisible unless Cloudflare wants an interaction. */
 export function Turnstile({ siteKey, onToken, onError }: TurnstileProps) {
   const container = useRef<HTMLDivElement>(null);
   const callbacks = useRef({ onToken, onError });

@@ -31,7 +31,6 @@ export const connectLive = async ({
   });
   webSocket.accept();
 
-  /** The raw frame, for frames that are not JSON messages, like the pong. */
   const nextText = () => {
     const queued = received.shift();
     const next =
@@ -48,7 +47,6 @@ export const connectLive = async ({
     return message;
   };
 
-  /** Skips other messages, such as presence updates from other viewers joining. */
   const nextMessageOf = async <Type extends LiveMessage["type"]>(type: Type) => {
     let message = await nextMessage();
     while (message.type !== type) message = await nextMessage();

@@ -34,7 +34,6 @@ export const rejectionText = (rejection: Rejection) => {
   }
 };
 
-/** A message stays while the cooldown runs, and at least 3 s. */
 export const withMessage = ({
   nextPaintAt,
   message,

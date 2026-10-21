@@ -59,7 +59,6 @@ const cookies = await Promise.all(Array.from({ length: sessionCount }, startSess
 const { cells } = await currentView(cookies[0] ?? "");
 const blankCells = cells.filter(({ color }) => color === null);
 const cellsToPaint = blankCells.slice(0, Math.max(0, blankCells.length - cellsLeftBlank));
-// Each session paints once per round, so a round waits for the cooldown.
 for (let start = 0; start < cellsToPaint.length; start += sessionCount) {
   const round = cellsToPaint.slice(start, start + sessionCount);
   const results = await Promise.all(

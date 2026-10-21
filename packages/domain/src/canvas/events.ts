@@ -21,7 +21,6 @@ export type CanvasFrozen = { type: "CanvasFrozen"; reason: FreezeReason; at: num
 
 export type CanvasUnfrozen = { type: "CanvasUnfrozen"; reason: FreezeReason; at: number };
 
-/** Recorded with the paint that fills the last blank cell; a new round starts at `resetAt`. */
 export type CanvasCompleted = { type: "CanvasCompleted"; at: number; resetAt: number };
 
 export type CanvasEvent =

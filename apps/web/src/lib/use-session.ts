@@ -14,7 +14,6 @@ const stateOf = (you: Painter | null) => {
   return state;
 };
 
-/** Asks the API who you are; without a session, Turnstile runs and a new one starts. */
 export const useSession = () => {
   const [session, setSession] = useState<SessionState>({ status: "checking" });
   useEffect(() => {

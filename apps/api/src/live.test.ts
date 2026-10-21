@@ -42,7 +42,6 @@ const createdCanvas = async () => {
   return canvas;
 };
 
-/** Past the greeting: the snapshot, the welcome and the online list. */
 const connectPastGreeting = async (viewer: Viewer) => {
   const client = await connect(viewer);
   await client.nextMessageOf("presence");
