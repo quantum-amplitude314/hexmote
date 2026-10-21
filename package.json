@@ -15,8 +15,8 @@
     }
   },
   "scripts": {
-    "test": "bun run --filter './packages/*' test",
-    "typecheck": "bun run --filter './packages/*' typecheck",
+    "test": "bun run --filter './packages/*' --filter './apps/*' test",
+    "typecheck": "bun run --filter './packages/*' --filter './apps/*' typecheck",
     "lint-fix": "biome check --write ."
   },
   "devDependencies": {

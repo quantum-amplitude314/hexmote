@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "hexmote-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-19",
+  "observability": { "enabled": true },
+  "vars": { "COOLDOWN_MS": "10000" },
+  "durable_objects": {
+    "bindings": [{ "name": "CANVAS", "class_name": "Canvas" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Canvas"] }]
+}

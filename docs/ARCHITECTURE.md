@@ -37,6 +37,9 @@ browser ⇄ /live (web Worker entry, ahead of OpenNext) ─service binding→ AP
 command → handleCommand: read events → replay → decide → append if accepted → Decision
 ```
 
+- The canvas Durable Object exposes `handleCommand(command)` over RPC through the `CANVAS` binding
+- Cooldown comes from the `COOLDOWN_MS` var
+
 ## Event store
 
 - Port `EventStore`: `read() → { events, version }` and `append({ events, expectedVersion })`
@@ -48,8 +51,8 @@ command → handleCommand: read events → replay → decide → append if accep
 ## Testing
 
 - `packages/domain`, `packages/application`: `bun test`
-- `apps/api`: Vitest with `@cloudflare/vitest-pool-workers`, inside workerd, against the real
-  Durable Object
+- `apps/api`: Vitest with `@cloudflare/vitest-plugin`, inside workerd, against the real
+  Durable Object; storage is isolated per test file, so each test uses a new canvas id
 
 ## Template
 
