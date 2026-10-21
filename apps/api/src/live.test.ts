@@ -34,8 +34,7 @@ const createdCanvas = async () => {
   return canvas;
 };
 
-/** A client that has already received its connect snapshot. */
-const connectedClient = async (target: Parameters<typeof connectLive>[0]) => {
+const connectPastSnapshot = async (target: Parameters<typeof connectLive>[0]) => {
   const client = await connect(target);
   await client.nextMessage();
 
@@ -60,7 +59,7 @@ describe("Canvas live updates", () => {
 
   test("broadcasts a snapshot when the canvas is created", async () => {
     const canvas = env.CANVAS.get(env.CANVAS.newUniqueId());
-    const client = await connectedClient(canvas);
+    const client = await connectPastSnapshot(canvas);
 
     await canvas.handleCommand(createCanvas);
 
@@ -72,8 +71,8 @@ describe("Canvas live updates", () => {
 
   test("broadcasts a painted cell with the new completion to every client", async () => {
     const canvas = await createdCanvas();
-    const first = await connectedClient(canvas);
-    const second = await connectedClient(canvas);
+    const first = await connectPastSnapshot(canvas);
+    const second = await connectPastSnapshot(canvas);
 
     await canvas.handleCommand(paintCell({ cell: cellA, color: red }));
 
@@ -84,7 +83,7 @@ describe("Canvas live updates", () => {
 
   test("broadcasts the status without the freeze reason", async () => {
     const canvas = await createdCanvas();
-    const client = await connectedClient(canvas);
+    const client = await connectPastSnapshot(canvas);
 
     await canvas.handleCommand(freezeCanvas({ reason: "budget" }));
 
@@ -93,7 +92,7 @@ describe("Canvas live updates", () => {
 
   test("sends nothing for a rejected command", async () => {
     const canvas = await createdCanvas();
-    const client = await connectedClient(canvas);
+    const client = await connectPastSnapshot(canvas);
 
     await canvas.handleCommand(paintCell({ cell: cellOutside, color: red }));
     await canvas.handleCommand(paintCell({ cell: cellA, color: red }));
@@ -104,7 +103,7 @@ describe("Canvas live updates", () => {
   test("keeps broadcasting after the Durable Object hibernates", async () => {
     const id = env.CANVAS.newUniqueId();
     await env.CANVAS.get(id).handleCommand(createCanvas);
-    const client = await connectedClient(env.CANVAS.get(id));
+    const client = await connectPastSnapshot(env.CANVAS.get(id));
     await evictDurableObject(env.CANVAS.get(id));
 
     await env.CANVAS.get(id).handleCommand(paintCell({ cell: cellA, color: red }));

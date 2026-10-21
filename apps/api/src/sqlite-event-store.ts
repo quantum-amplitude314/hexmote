@@ -6,7 +6,6 @@ type CreateSqliteEventStore = (storage: DurableObjectStorage) => EventStore;
 type EventRow = { payload: string };
 type VersionRow = { version: number };
 
-/** Adapter: one canvas stream in the Durable Object's SQLite `events` table. */
 export const createSqliteEventStore: CreateSqliteEventStore = (storage) => {
   const { sql } = storage;
   sql.exec(`CREATE TABLE IF NOT EXISTS events (

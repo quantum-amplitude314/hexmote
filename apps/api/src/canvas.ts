@@ -13,7 +13,6 @@ import { createSqliteEventStore } from "./sqlite-event-store.ts";
 export class Canvas extends DurableObject<Env> {
   private readonly store = createSqliteEventStore(this.ctx.storage);
   private readonly cooldownMs = Number(this.env.COOLDOWN_MS);
-  /** Read model; `null` until the first read replays the stream. */
   private view: CanvasView | null = null;
 
   async handleCommand(command: CanvasCommand) {
@@ -41,7 +40,6 @@ export class Canvas extends DurableObject<Env> {
     return this.view;
   }
 
-  /** `/live`: accepts the WebSocket with the Hibernation API and sends a snapshot. */
   override async fetch(_request: Request): Promise<Response> {
     return notImplemented();
   }

@@ -7,7 +7,6 @@ type HandleCommand = (input: {
   cooldownMs: number;
 }) => Promise<Decision>;
 
-/** Read the stream, replay it, decide, and append the accepted events. */
 export const handleCommand: HandleCommand = async ({ store, command, cooldownMs }) => {
   const { events, version } = await store.read();
   const decision = decide({ state: replay(events), command, cooldownMs });

@@ -10,7 +10,6 @@ import type {
 
 export type CanvasViewCell = { cell: Cell; targetColor: HexCodeColor; color: HexCodeColor | null };
 
-/** Read model for the canvas page; the public API exposes `status`, never `freezes`. */
 export type CanvasView = {
   cells: CanvasViewCell[];
   completionPercent: number;

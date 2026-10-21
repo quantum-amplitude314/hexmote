@@ -9,7 +9,6 @@ import {
 } from "../index.ts";
 import { cooldownMs } from "./fixtures.ts";
 
-/** Given past events, when a command arrives, or what the canvas view shows. */
 export const given = (events: CanvasEvent[]) => {
   const scenario = {
     when: (command: CanvasCommand) => decide({ state: replay(events), command, cooldownMs }),

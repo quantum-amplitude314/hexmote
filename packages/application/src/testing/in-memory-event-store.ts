@@ -3,7 +3,6 @@ import { type EventStore, VersionConflictError } from "../event-store.ts";
 
 type CreateInMemoryEventStore = (initialEvents?: CanvasEvent[]) => EventStore;
 
-/** Adapter for tests: one stream kept in an array. */
 export const createInMemoryEventStore: CreateInMemoryEventStore = (initialEvents = []) => {
   const stream = [...initialEvents];
 

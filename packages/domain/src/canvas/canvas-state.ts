@@ -8,10 +8,7 @@ import type {
   FreezeReason,
 } from "./events.ts";
 
-/**
- * What `decide` needs to enforce the rules; not a read model.
- * `status` is the lifecycle; `freezes` are holds that can overlap, each lifted on its own.
- */
+/** What `decide` needs to enforce the rules; the read model is `CanvasView`. */
 export type CanvasState =
   | { status: "none" }
   | {

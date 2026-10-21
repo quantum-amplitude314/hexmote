@@ -7,78 +7,46 @@
 | Monorepo | Bun workspaces, Biome, tsc |
 | Web | Next.js on Cloudflare Workers through OpenNext |
 | API | Hono + oRPC contract |
-| Canvas | One SQLite-backed Durable Object: command handler, event store, read model, WebSocket broadcast |
+| Canvas | One SQLite-backed Durable Object per canvas |
 | Bot protection | Turnstile |
 
 ## Flow
 
 ```
-browser → web Worker (Next.js) ─service binding→ API Worker (Hono) → canvas Durable Object → SQLite events
-browser ⇄ /live (web Worker entry, ahead of OpenNext) ─service binding→ API Worker → canvas Durable Object
+browser ──────▶ web Worker (Next.js) ─service binding─▶ API Worker (Hono) ─RPC─▶ Canvas Durable Object
+browser ⇄ /live web Worker entry     ─service binding─▶ API Worker        ─────▶ Canvas Durable Object
 ```
 
-- The API Worker has no public route; the web Worker reaches it through a service binding
-- `/live` upgrades to a WebSocket on the web host and is forwarded over the same binding,
-  so the session cookie stays first-party and no CORS is needed
-- The canvas Durable Object accepts WebSockets with the hibernation API
+The API Worker has no public route. `/live` stays on the web host, so the session cookie is
+first-party and no CORS is needed.
 
 ## Layers
 
-| Package | Hexagonal role |
+| Package | Role |
 |---|---|
-| `packages/domain` | core: deciders, `evolve`, views; pure, no IO |
-| `packages/application` | application: `handleCommand` and the `EventStore` port |
-| `apps/api` | adapters: Durable Object SQLite event store, Hono routes, WebSocket |
+| `packages/domain` | core: deciders and views, pure; laid out by slice, tests next to the code |
+| `packages/application` | `handleCommand` and the `EventStore` port |
+| `apps/api` | adapters: Canvas Durable Object, SQLite event store, `/live` |
 | `apps/web` | UI |
 
-## Command handling
+Dependencies point inward: api → application → domain.
 
-```
-command → handleCommand: read events → replay → decide → append if accepted → Decision
-```
+## Canvas Durable Object
 
-- The canvas Durable Object exposes `handleCommand(command)` over RPC through the `CANVAS` binding
-- Cooldown comes from the `COOLDOWN_MS` var
+One canvas = one Durable Object = one event stream.
 
-## Read model
-
-- `getView()` over RPC returns the `CanvasView`
-- Kept in memory: replayed from the stream on the first read, then updated with the events of
-  each accepted command; rebuilt the same way after eviction
-- Updated in the same Durable Object right after the append, so it is never behind the stream;
-  projections in other stores (D1, later) are eventually consistent
-
-## Live updates
-
-- The API Worker forwards `/live` to the canvas Durable Object, which accepts the WebSocket with
-  the Hibernation API: it can sleep while clients stay connected
-- Server to client only; commands go through the API
-- On connect: `snapshot` with the public view
-- After an accepted command, one message per event: `snapshot` for `CanvasCreated`,
-  `cellPainted` with the new completion, `status` for freeze and unfreeze
-- Rejected commands send nothing
-- Public view = `CanvasView` without `freezes`: session ids and freeze reasons never leave the
-  Durable Object
-
-## Event store
-
-- Port `EventStore`: `read() → { events, version }` and `append({ events, expectedVersion })`
-- Optimistic concurrency: `append` fails when the stream has moved past `expectedVersion`
-- `append` runs in one SQLite transaction (`transactionSync`): a conflict or a failed insert rolls
-  back every row
-- No locks or deadlocks: the Durable Object handles one request at a time, and `handleCommand` does
-  no outside IO between read and append; `expectedVersion` is the backstop
-- Adapters: Durable Object SQLite in the Worker, in memory for tests
-- One canvas = one Durable Object = one stream
-- SQLite table `events`: `version` (integer primary key), `type`, `payload` (JSON), `recorded_at`
+- Commands: read the stream, replay, decide, append at `expectedVersion` in one SQLite transaction
+- No locks or deadlocks: the Durable Object runs one request at a time; `expectedVersion` is the backstop
+- Read model: `CanvasView` in memory, updated right after each append, so never behind the stream
+- `/live`: hibernatable WebSockets, a snapshot on connect, then one message per event; session ids
+  and freeze reasons stay inside
 
 ## Testing
 
-- `packages/domain`, `packages/application`: `bun test`
-- `apps/api`: Vitest with `@cloudflare/vitest-plugin`, inside workerd, against the real
-  Durable Object; storage is isolated per test file, so each test uses a new canvas id
+`bun test` for domain and application; Vitest in workerd (`@cloudflare/vitest-plugin`) for the
+api, against the real Durable Object.
 
 ## Template
 
-- Emoji from an open set, e.g. OpenMoji (CC BY-SA 4.0, attribution required)
-- A script downsamples the image onto the hex grid and quantizes it to the palette
+OpenMoji emoji (CC BY-SA 4.0, attribution required), downsampled onto the hex grid and quantized
+to the palette.

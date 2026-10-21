@@ -1,6 +1,5 @@
 import type { LiveMessage } from "../live.ts";
 
-/** Test client: connects to `/live` and hands out received messages in order. */
 type FetchTarget = { fetch: (input: string, init?: RequestInit) => Promise<Response> };
 
 export const connectLive = async (target: FetchTarget) => {
