@@ -1,0 +1,4 @@
+# Socket checks every package before install; free mode without SOCKET_API_TOKEN.
+# Replaces the sfw proxy for Bun: sfw opens a new connection per request (350+ on a large update).
+[install.security]
+scanner = "@socketsecurity/bun-security-scanner"
