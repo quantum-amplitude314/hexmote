@@ -22,6 +22,35 @@ browser ⇄ /live (web Worker entry, ahead of OpenNext) ─service binding→ AP
   so the session cookie stays first-party and no CORS is needed
 - The canvas Durable Object accepts WebSockets with the hibernation API
 
+## Layers
+
+| Package | Hexagonal role |
+|---|---|
+| `packages/domain` | core: deciders, `evolve`, views; pure, no IO |
+| `packages/application` | application: `handleCommand` and the `EventStore` port |
+| `apps/api` | adapters: Durable Object SQLite event store, Hono routes, WebSocket |
+| `apps/web` | UI |
+
+## Command handling
+
+```
+command → handleCommand: read events → replay → decide → append if accepted → Decision
+```
+
+## Event store
+
+- Port `EventStore`: `read() → { events, version }` and `append({ events, expectedVersion })`
+- Optimistic concurrency: `append` fails when the stream has moved past `expectedVersion`
+- Adapters: Durable Object SQLite in the Worker, in memory for tests
+- One canvas = one Durable Object = one stream
+- SQLite table `events`: `version` (integer primary key), `type`, `payload` (JSON), `recorded_at`
+
+## Testing
+
+- `packages/domain`, `packages/application`: `bun test`
+- `apps/api`: Vitest with `@cloudflare/vitest-pool-workers`, inside workerd, against the real
+  Durable Object
+
 ## Template
 
 - Emoji from an open set, e.g. OpenMoji (CC BY-SA 4.0, attribution required)
