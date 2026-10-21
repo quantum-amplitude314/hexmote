@@ -8,3 +8,4 @@ https://hexmote.quantum-amplitude.tech
 - [Event model](docs/EVENT-MODEL.md)
 - [Domain](docs/DOMAIN.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Glossary](docs/GLOSSARY.md)

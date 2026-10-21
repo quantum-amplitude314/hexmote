@@ -5,7 +5,6 @@ import { decideFreezeCanvas } from "./slices/freeze-canvas/freeze-canvas.ts";
 import { decidePaintCell } from "./slices/paint-cell/paint-cell.ts";
 import { decideUnfreezeCanvas } from "./slices/unfreeze-canvas/unfreeze-canvas.ts";
 
-/** Routes each command to its slice. */
 export const decide = ({
   state,
   command,

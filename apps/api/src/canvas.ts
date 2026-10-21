@@ -1,10 +1,20 @@
 import { DurableObject } from "cloudflare:workers";
-import type { CanvasCommand, Decision } from "@hexmote/domain";
-import { notImplemented } from "./not-implemented.ts";
+import { handleCommand } from "@hexmote/application";
+import type { CanvasCommand } from "@hexmote/domain";
+import { createSqliteEventStore } from "./sqlite-event-store.ts";
 
-/** One canvas = one Durable Object = one event stream. RPC methods live on the prototype. */
+/** RPC reaches prototype methods only, so handlers are class methods, not arrow-function fields. */
 export class Canvas extends DurableObject<Env> {
-  async handleCommand(_command: CanvasCommand): Promise<Decision> {
-    return notImplemented();
+  private readonly store = createSqliteEventStore(this.ctx.storage);
+  private readonly cooldownMs = Number(this.env.COOLDOWN_MS);
+
+  async handleCommand(command: CanvasCommand) {
+    const decision = await handleCommand({
+      store: this.store,
+      command,
+      cooldownMs: this.cooldownMs,
+    });
+
+    return decision;
   }
 }

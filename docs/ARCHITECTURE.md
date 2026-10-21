@@ -44,6 +44,10 @@ command → handleCommand: read events → replay → decide → append if accep
 
 - Port `EventStore`: `read() → { events, version }` and `append({ events, expectedVersion })`
 - Optimistic concurrency: `append` fails when the stream has moved past `expectedVersion`
+- `append` runs in one SQLite transaction (`transactionSync`): a conflict or a failed insert rolls
+  back every row
+- No locks or deadlocks: the Durable Object handles one request at a time, and `handleCommand` does
+  no outside IO between read and append; `expectedVersion` is the backstop
 - Adapters: Durable Object SQLite in the Worker, in memory for tests
 - One canvas = one Durable Object = one stream
 - SQLite table `events`: `version` (integer primary key), `type`, `payload` (JSON), `recorded_at`
