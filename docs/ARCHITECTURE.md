@@ -48,6 +48,18 @@ command → handleCommand: read events → replay → decide → append if accep
 - Updated in the same Durable Object right after the append, so it is never behind the stream;
   projections in other stores (D1, later) are eventually consistent
 
+## Live updates
+
+- The API Worker forwards `/live` to the canvas Durable Object, which accepts the WebSocket with
+  the Hibernation API: it can sleep while clients stay connected
+- Server to client only; commands go through the API
+- On connect: `snapshot` with the public view
+- After an accepted command, one message per event: `snapshot` for `CanvasCreated`,
+  `cellPainted` with the new completion, `status` for freeze and unfreeze
+- Rejected commands send nothing
+- Public view = `CanvasView` without `freezes`: session ids and freeze reasons never leave the
+  Durable Object
+
 ## Event store
 
 - Port `EventStore`: `read() → { events, version }` and `append({ events, expectedVersion })`

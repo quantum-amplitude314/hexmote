@@ -6,6 +6,7 @@ import {
   evolveCanvasView,
   replayCanvasView,
 } from "@hexmote/domain";
+import { notImplemented } from "./not-implemented.ts";
 import { createSqliteEventStore } from "./sqlite-event-store.ts";
 
 /** RPC reaches prototype methods only, so handlers are class methods, not arrow-function fields. */
@@ -38,5 +39,10 @@ export class Canvas extends DurableObject<Env> {
     }
 
     return this.view;
+  }
+
+  /** `/live`: accepts the WebSocket with the Hibernation API and sends a snapshot. */
+  override async fetch(_request: Request): Promise<Response> {
+    return notImplemented();
   }
 }
