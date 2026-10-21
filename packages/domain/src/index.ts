@@ -1,20 +1,13 @@
-export { type CanvasState, evolve, initialState, replay } from "./canvas-state.ts";
-export {
-  type CanvasView,
-  type CanvasViewCell,
-  emptyCanvasView,
-  evolveCanvasView,
-  replayCanvasView,
-} from "./canvas-view.ts";
-export type { Cell, HexCodeColor, TemplateCell } from "./cell.ts";
+export { type CanvasState, evolve, initialState, replay } from "./canvas/canvas-state.ts";
+export type { Cell, HexCodeColor, TemplateCell } from "./canvas/cell.ts";
 export type {
   CanvasCommand,
   CreateCanvas,
   FreezeCanvas,
   PaintCell,
   UnfreezeCanvas,
-} from "./commands.ts";
-export { type Decision, decide, type Rejection } from "./decide.ts";
+} from "./canvas/commands.ts";
+export type { Decision, Rejection } from "./canvas/decision.ts";
 export type {
   CanvasCreated,
   CanvasEvent,
@@ -22,4 +15,12 @@ export type {
   CanvasUnfrozen,
   CellPainted,
   FreezeReason,
-} from "./events.ts";
+} from "./canvas/events.ts";
+export { decide } from "./decide.ts";
+export {
+  type CanvasView,
+  type CanvasViewCell,
+  emptyCanvasView,
+  evolveCanvasView,
+  replayCanvasView,
+} from "./slices/canvas-view/canvas-view.ts";

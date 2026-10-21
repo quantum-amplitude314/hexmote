@@ -6,7 +6,7 @@ import {
   type Rejection,
   replay,
   replayCanvasView,
-} from "../src/index.ts";
+} from "../index.ts";
 import { cooldownMs } from "./fixtures.ts";
 
 /** Given past events, when a command arrives, or what the canvas view shows. */

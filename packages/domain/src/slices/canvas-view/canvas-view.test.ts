@@ -10,8 +10,8 @@ import {
   cellD,
   cellPainted,
   red,
-} from "./fixtures.ts";
-import { given } from "./given.ts";
+} from "../../testing/fixtures.ts";
+import { given } from "../../testing/given.ts";
 
 describe("Slice 5: Canvas view", () => {
   test("starts with blank cells, 0 % completion and an open canvas", () => {

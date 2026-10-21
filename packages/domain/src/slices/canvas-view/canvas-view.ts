@@ -1,4 +1,4 @@
-import { type Cell, cellKey, type HexCodeColor } from "./cell.ts";
+import { type Cell, cellKey, type HexCodeColor } from "../../canvas/cell.ts";
 import type {
   CanvasCreated,
   CanvasEvent,
@@ -6,7 +6,7 @@ import type {
   CanvasUnfrozen,
   CellPainted,
   FreezeReason,
-} from "./events.ts";
+} from "../../canvas/events.ts";
 
 export type CanvasViewCell = { cell: Cell; targetColor: HexCodeColor; color: HexCodeColor | null };
 

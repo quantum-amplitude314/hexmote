@@ -7,8 +7,8 @@ import {
   paintCell,
   red,
   unfreezeCanvas,
-} from "./fixtures.ts";
-import { accepted, given, rejected } from "./given.ts";
+} from "../../testing/fixtures.ts";
+import { accepted, given, rejected } from "../../testing/given.ts";
 
 describe("Slice 4: Unfreeze canvas", () => {
   test("unfreezes a canvas frozen for that reason", () => {

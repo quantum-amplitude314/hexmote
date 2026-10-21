@@ -13,8 +13,8 @@ import {
   s2,
   seconds,
   t,
-} from "./fixtures.ts";
-import { accepted, given, rejected } from "./given.ts";
+} from "../../testing/fixtures.ts";
+import { accepted, given, rejected } from "../../testing/given.ts";
 
 describe("Slice 2: Paint a cell", () => {
   test("paints a cell on an open canvas", () => {

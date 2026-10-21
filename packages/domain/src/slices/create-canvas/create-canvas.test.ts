@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { canvasCreated, cellA, createCanvas, notInPalette } from "./fixtures.ts";
-import { accepted, given, rejected } from "./given.ts";
+import { canvasCreated, cellA, createCanvas, notInPalette } from "../../testing/fixtures.ts";
+import { accepted, given, rejected } from "../../testing/given.ts";
 
 describe("Slice 1: Create canvas", () => {
   test("creates the canvas", () => {

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { canvasCreated, canvasFrozen, freezeCanvas } from "./fixtures.ts";
-import { accepted, given, rejected } from "./given.ts";
+import { canvasCreated, canvasFrozen, freezeCanvas } from "../../testing/fixtures.ts";
+import { accepted, given, rejected } from "../../testing/given.ts";
 
 describe("Slice 3: Freeze canvas", () => {
   test("freezes an open canvas", () => {

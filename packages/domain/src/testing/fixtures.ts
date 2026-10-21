@@ -10,7 +10,7 @@ import type {
   HexCodeColor,
   PaintCell,
   UnfreezeCanvas,
-} from "../src/index.ts";
+} from "../index.ts";
 
 export const red = "#e53935";
 export const blue = "#1e88e5";
