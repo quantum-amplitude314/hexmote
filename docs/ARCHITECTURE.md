@@ -26,6 +26,7 @@ first-party and no CORS is needed.
 |---|---|
 | `packages/domain` | core: deciders and views, pure; laid out by slice, tests next to the code |
 | `packages/application` | `handleCommand` and the `EventStore` port |
+| `packages/template` | build time: emoji PNG → template cells and palette |
 | `apps/api` | adapters: Canvas Durable Object, SQLite event store, `/live` |
 | `apps/web` | UI |
 
@@ -48,5 +49,6 @@ api, against the real Durable Object.
 
 ## Template
 
-OpenMoji emoji (CC BY-SA 4.0, attribution required), downsampled onto the hex grid and quantized
-to the palette.
+OpenMoji emoji (CC BY-SA 4.0, attribution required). `packages/template` samples the PNG at each
+hex centre: transparent centres are left out, the rest take the nearest palette colour (the 16
+colours of r/place 2017). The generated JSON is committed.

@@ -1,0 +1,20 @@
+import type { HexCodeColor } from "@hexmote/domain";
+
+export const placePalette: HexCodeColor[] = [
+  "#ffffff",
+  "#e4e4e4",
+  "#888888",
+  "#222222",
+  "#ffa7d1",
+  "#e50000",
+  "#e59500",
+  "#a06a42",
+  "#e5d900",
+  "#94e044",
+  "#02be01",
+  "#00d3dd",
+  "#0083c7",
+  "#0000ea",
+  "#cf6ee4",
+  "#820080",
+];

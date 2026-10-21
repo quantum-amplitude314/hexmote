@@ -43,6 +43,17 @@
         "typescript": "catalog:",
       },
     },
+    "packages/template": {
+      "name": "@hexmote/template",
+      "version": "0.1.0",
+      "dependencies": {
+        "@hexmote/domain": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
   },
   "catalog": {
     "@types/bun": "^1.4.2",
@@ -144,6 +155,8 @@
     "@hexmote/application": ["@hexmote/application@workspace:packages/application"],
 
     "@hexmote/domain": ["@hexmote/domain@workspace:packages/domain"],
+
+    "@hexmote/template": ["@hexmote/template@workspace:packages/template"],
 
     "@img/colour": ["@img/colour@1.1.0", "", {}, "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ=="],
 
