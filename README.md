@@ -5,5 +5,6 @@ A learning project for CQRS and Event Sourcing. PoC Demo Project.
 
 https://hexmote.quantum-amplitude.tech
 
+- [Event model](docs/EVENT-MODEL.md)
 - [Domain](docs/DOMAIN.md)
 - [Architecture](docs/ARCHITECTURE.md)
