@@ -1,4 +1,4 @@
-import type { LiveMessage } from "../live.ts";
+import type { LiveMessage } from "@hexmote/contracts";
 
 type FetchTarget = { fetch: (input: string, init?: RequestInit) => Promise<Response> };
 

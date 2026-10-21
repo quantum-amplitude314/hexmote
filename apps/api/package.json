@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@hexmote/application": "workspace:*",
+    "@hexmote/contracts": "workspace:*",
     "@hexmote/domain": "workspace:*",
     "@hexmote/template": "workspace:*"
   },

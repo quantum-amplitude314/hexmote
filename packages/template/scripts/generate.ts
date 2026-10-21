@@ -2,17 +2,12 @@ import { join } from "node:path";
 import { convertIndexedToRgb, decode } from "fast-png";
 import { buildTemplate, placePalette } from "../src/index.ts";
 
-const source = {
-  emoji: "1F600 grinning face",
-  url: "https://raw.githubusercontent.com/hfg-gmuend/openmoji/17.0.0/color/618x618/1F600.png",
-  license: "OpenMoji, CC BY-SA 4.0",
-};
+const source = { emoji: "1F600 grinning face", image: "source/grinning-face.png" };
 const cellsAcross = 40;
+const sourcePath = join(import.meta.dir, "..", source.image);
 const outputPath = join(import.meta.dir, "../generated/grinning-face.json");
 
-const response = await fetch(source.url);
-if (!response.ok) throw new Error(`Download failed with ${response.status}`);
-const png = decode(await response.arrayBuffer());
+const png = decode(await Bun.file(sourcePath).arrayBuffer());
 const { width, height, palette: indexedColors } = png;
 const rgba = indexedColors ? convertIndexedToRgb(png) : new Uint8Array(png.data);
 if (png.depth !== 8 || rgba.length !== width * height * 4) {

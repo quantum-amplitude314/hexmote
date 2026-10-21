@@ -12,6 +12,10 @@ https://hexmote.quantum-amplitude.tech
 ## Run locally
 
 ```sh
-cd apps/api && bun run dev                  # API on localhost:8787
-curl -X POST localhost:8787/admin/canvas    # create the 😀 canvas
+bun install
+cp apps/web/.env.example apps/web/.env.development   # once
+bun run dev                                          # API on :8787, web on :3000
+curl -X POST localhost:8787/admin/canvas             # create the 😀 canvas, once
 ```
+
+Open http://localhost:3000.

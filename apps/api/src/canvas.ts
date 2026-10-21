@@ -1,5 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { handleCommand } from "@hexmote/application";
+import type { LiveMessage } from "@hexmote/contracts";
 import {
   type CanvasCommand,
   type CanvasEvent,
@@ -7,7 +8,7 @@ import {
   evolveCanvasView,
   replayCanvasView,
 } from "@hexmote/domain";
-import { type LiveMessage, liveMessageFor, snapshotOf } from "./live.ts";
+import { liveMessageFor, snapshotOf } from "./live.ts";
 import { createSqliteEventStore } from "./sqlite-event-store.ts";
 
 export type DeleteResult = { status: "deleted" } | { status: "refused"; reason: "budgetFreeze" };

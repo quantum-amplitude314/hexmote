@@ -1,5 +1,5 @@
 export { type CanvasState, evolve, initialState, replay } from "./canvas/canvas-state.ts";
-export type { Cell, HexCodeColor, TemplateCell } from "./canvas/cell.ts";
+export { type Cell, cellKey, type HexCodeColor, type TemplateCell } from "./canvas/cell.ts";
 export type {
   CanvasCommand,
   CreateCanvas,

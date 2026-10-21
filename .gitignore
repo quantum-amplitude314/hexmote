@@ -3,6 +3,7 @@ coverage/
 *.tsbuildinfo
 .env
 .env.*
+!.env.example
 
 # private
 work-docs/
@@ -17,3 +18,9 @@ CLAUDE.md
 # cloudflare
 .wrangler/
 worker-configuration.d.ts
+cloudflare-env.d.ts
+
+# next
+.next/
+.open-next/
+next-env.d.ts

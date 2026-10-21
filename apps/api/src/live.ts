@@ -1,11 +1,5 @@
-import type { CanvasEvent, CanvasView, Cell, HexCodeColor } from "@hexmote/domain";
-
-export type PublicCanvasView = Omit<CanvasView, "freezes">;
-
-export type LiveMessage =
-  | { type: "snapshot"; view: PublicCanvasView }
-  | { type: "cellPainted"; cell: Cell; color: HexCodeColor; completionPercent: number }
-  | { type: "status"; status: CanvasView["status"] };
+import type { LiveMessage, PublicCanvasView } from "@hexmote/contracts";
+import type { CanvasEvent, CanvasView } from "@hexmote/domain";
 
 type LiveMessageFor = (input: { event: CanvasEvent; view: CanvasView }) => LiveMessage;
 

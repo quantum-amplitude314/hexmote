@@ -28,8 +28,9 @@ host, so the session cookie is first-party and no CORS is needed.
 | `packages/domain` | core: deciders and views, pure; laid out by slice, tests next to the code |
 | `packages/application` | `handleCommand` and the `EventStore` port |
 | `packages/template` | build time: emoji PNG → template cells and palette |
-| `apps/api` | adapters: Canvas Durable Object, SQLite event store, `/live` |
-| `apps/web` | UI |
+| `packages/contracts` | types shared by api and web: live messages |
+| `apps/api` | adapters: Canvas Durable Object, SQLite event store, `/live`, `/admin` |
+| `apps/web` | UI: Next.js with shadcn; the live hex grid on `/` |
 
 Dependencies point inward: api → application → domain.
 
@@ -45,12 +46,12 @@ One canvas = one Durable Object = one event stream.
 
 ## Testing
 
-`bun test` for domain and application; Vitest in workerd (`@cloudflare/vitest-plugin`) for the
-api, against the real Durable Object.
+`bun test` for domain, application, template and the web's pure functions (hex geometry, live
+view); Vitest in workerd (`@cloudflare/vitest-plugin`) for the api, against the real Durable Object.
 
 ## Template
 
-OpenMoji emoji (CC BY-SA 4.0, attribution required). `packages/template` samples the PNG at each
-hex centre: transparent centres are left out, the rest take the nearest palette colour (the 16
-colours of r/place 2017). `bun run generate` in `packages/template` writes the JSON, which is
-committed.
+😀 rendered locally from the Noto Color Emoji font to `packages/template/source/`. The template
+samples the PNG at each hex centre: transparent centres are left out, the rest take the nearest
+palette colour (the 16 colours of r/place 2017). `bun run generate` in `packages/template` writes
+the JSON, which is committed.

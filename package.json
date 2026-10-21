@@ -15,6 +15,7 @@
     }
   },
   "scripts": {
+    "dev": "bun run --filter @hexmote/api --filter @hexmote/web dev",
     "test": "bun run --filter './packages/*' --filter './apps/*' test",
     "typecheck": "bun run --filter './packages/*' --filter './apps/*' typecheck",
     "lint-fix": "biome check --write ."
