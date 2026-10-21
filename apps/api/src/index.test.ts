@@ -11,4 +11,12 @@ describe("API Worker", () => {
     expect(await client.nextMessage()).toEqual({ type: "snapshot", view });
     client.close();
   });
+
+  test("forwards /admin to the canvas", async () => {
+    const response = await exports.default.fetch("http://hexmote/admin/canvas", {
+      method: "DELETE",
+    });
+
+    expect(response.status).toBe(204);
+  });
 });

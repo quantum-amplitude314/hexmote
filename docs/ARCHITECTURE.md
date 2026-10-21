@@ -15,10 +15,11 @@
 ```
 browser ──────▶ web Worker (Next.js) ─service binding─▶ API Worker (Hono) ─RPC─▶ Canvas Durable Object
 browser ⇄ /live web Worker entry     ─service binding─▶ API Worker        ─────▶ Canvas Durable Object
+admin   ──▶ /admin web Worker entry  ─service binding─▶ API Worker        ─RPC─▶ Canvas Durable Object
 ```
 
-The API Worker has no public route. `/live` stays on the web host, so the session cookie is
-first-party and no CORS is needed.
+The API Worker has no public URL (`workers_dev` and `preview_urls` off). `/live` stays on the web
+host, so the session cookie is first-party and no CORS is needed.
 
 ## Layers
 

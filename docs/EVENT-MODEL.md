@@ -18,6 +18,7 @@ admin    ── UnfreezeCanvas ──▶ CanvasUnfrozen ──┘
 - Palette and template are fixed in `CanvasCreated`; the cooldown is configuration, not history
 - Freezes are holds that can overlap: each reason is frozen and lifted on its own
 - `sessionId` and `at` are set by the server, never by the client
+- Deleting a canvas is not a command: it wipes the stream, so `CreateCanvas` can start over
 
 ## Slices
 
