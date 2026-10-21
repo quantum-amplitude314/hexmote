@@ -1,3 +1,10 @@
+export type {
+  AdminCanvasStatus,
+  AdminResult,
+  BudgetFreezeRefusal,
+  DeleteResult,
+  ResetResult,
+} from "./admin.ts";
 export { type Contract, contract } from "./contract.ts";
 export {
   type LiveMessage,

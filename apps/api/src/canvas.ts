@@ -1,6 +1,13 @@
 import { DurableObject } from "cloudflare:workers";
 import { handleCommand } from "@hexmote/application";
-import { type LiveMessage, livePing, livePong } from "@hexmote/contracts";
+import {
+  type BudgetFreezeRefusal,
+  type DeleteResult,
+  type LiveMessage,
+  livePing,
+  livePong,
+  type ResetResult,
+} from "@hexmote/contracts";
 import {
   type CanvasCommand,
   type CanvasConfig,
@@ -12,15 +19,6 @@ import {
 import { liveMessageFor, snapshotOf } from "./live.ts";
 import { painterOf } from "./painter.ts";
 import { createSqliteEventStore } from "./sqlite-event-store.ts";
-
-type BudgetFreezeRefusal = { status: "refused"; reason: "budgetFreeze" };
-
-export type DeleteResult = { status: "deleted" } | BudgetFreezeRefusal;
-
-export type ResetResult =
-  | { status: "reset" }
-  | BudgetFreezeRefusal
-  | { status: "refused"; reason: "noCanvas" };
 
 const budgetFreezeRefusal: BudgetFreezeRefusal = { status: "refused", reason: "budgetFreeze" };
 

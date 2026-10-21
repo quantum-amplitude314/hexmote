@@ -17,10 +17,10 @@ cp apps/api/.dev.vars.example apps/api/.dev.vars     # once
 cp apps/web/.env.example apps/web/.env.development   # once
 cp apps/web/wrangler.example.jsonc apps/web/wrangler.jsonc   # once, set your domain
 bun run dev                                          # API on :8787, web on :3000
-curl -X POST localhost:8787/admin/canvas             # create the 😀 canvas, once
 ```
 
-Open http://localhost:3000, pick a colour and click a cell; the cooldown is 1 s locally. A private
+Create the 😀 canvas once on http://localhost:3000/admin; the same page freezes, resets and deletes
+it. Open http://localhost:3000, pick a colour and click a cell; the cooldown is 1 s locally. A private
 window is a second painter: both appear online, and each sees the other's paints pulse with a name.
 
 `bun run fill` paints all but 3 cells. Paint those to complete the canvas: a countdown starts, and

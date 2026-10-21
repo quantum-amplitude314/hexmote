@@ -1,5 +1,6 @@
-import type { CreateCanvas, Decision } from "@hexmote/domain";
-import type { Canvas, DeleteResult, ResetResult } from "./canvas.ts";
+import type { AdminCanvasStatus, AdminResult } from "@hexmote/contracts";
+import type { CanvasView, CreateCanvas } from "@hexmote/domain";
+import type { Canvas } from "./canvas.ts";
 
 type HandleAdminRequest = (input: {
   request: Request;
@@ -7,32 +8,43 @@ type HandleAdminRequest = (input: {
   emote: Pick<CreateCanvas, "palette" | "template">;
 }) => Promise<Response>;
 
-const decisionResponse = (decision: Decision) =>
-  Response.json(decision, { status: decision.status === "accepted" ? 200 : 409 });
+const resultResponse = (result: AdminResult) =>
+  Response.json(result, {
+    status: result.status === "rejected" || result.status === "refused" ? 409 : 200,
+  });
 
-const refusableResponse = (result: DeleteResult | ResetResult) =>
-  result.status === "refused"
-    ? Response.json(result, { status: 409 })
-    : new Response(null, { status: 204 });
+const adminStatusOf = ({ cells, status, paintedPercent, freezes, resetAt }: CanvasView) => {
+  const adminStatus: AdminCanvasStatus = {
+    exists: cells.length > 0,
+    status,
+    paintedPercent,
+    freezes,
+    resetAt,
+  };
+
+  return adminStatus;
+};
 
 export const handleAdminRequest: HandleAdminRequest = async ({ request, canvas, emote }) => {
   const { pathname } = new URL(request.url);
   const at = Date.now();
   switch (`${request.method} ${pathname}`) {
+    case "GET /admin/canvas":
+      return Response.json(adminStatusOf(await canvas.getView()));
     case "POST /admin/canvas":
-      return decisionResponse(await canvas.handleCommand({ type: "CreateCanvas", ...emote, at }));
+      return resultResponse(await canvas.handleCommand({ type: "CreateCanvas", ...emote, at }));
     case "POST /admin/freeze":
-      return decisionResponse(
+      return resultResponse(
         await canvas.handleCommand({ type: "FreezeCanvas", reason: "manual", at }),
       );
     case "POST /admin/unfreeze":
-      return decisionResponse(
+      return resultResponse(
         await canvas.handleCommand({ type: "UnfreezeCanvas", reason: "manual", at }),
       );
     case "POST /admin/reset":
-      return refusableResponse(await canvas.resetCanvas());
+      return resultResponse(await canvas.resetCanvas());
     case "DELETE /admin/canvas":
-      return refusableResponse(await canvas.deleteCanvas());
+      return resultResponse(await canvas.deleteCanvas());
     default:
       return new Response("Not found", { status: 404 });
   }

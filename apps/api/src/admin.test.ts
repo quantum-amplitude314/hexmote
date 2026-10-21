@@ -35,6 +35,7 @@ const deleteCanvasRequest = { method: "DELETE", path: "/admin/canvas" };
 const freezeRequest = { method: "POST", path: "/admin/freeze" };
 const unfreezeRequest = { method: "POST", path: "/admin/unfreeze" };
 const resetRequest = { method: "POST", path: "/admin/reset" };
+const statusRequest = { method: "GET", path: "/admin/canvas" };
 
 describe("Admin routes", () => {
   test("creates the canvas with the emote", async () => {
@@ -97,7 +98,8 @@ describe("Admin routes", () => {
 
     const response = await send(deleteCanvasRequest);
 
-    expect(response.status).toBe(204);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ status: "deleted" });
     expect(await canvas.getView()).toEqual(emptyCanvasView);
     expect((await send(createCanvasRequest)).status).toBe(200);
   });
@@ -132,7 +134,8 @@ describe("Admin routes", () => {
 
     const response = await send(resetRequest);
 
-    expect(response.status).toBe(204);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ status: "reset" });
     expect(await canvas.getView()).toEqual(replayCanvasView([canvasCreated]));
   });
 
@@ -154,6 +157,50 @@ describe("Admin routes", () => {
     const response = await send(resetRequest);
 
     expect(response.status).toBe(409);
+  });
+
+  test("reports that there is no canvas yet", async () => {
+    const { send } = adminOfNewCanvas();
+
+    const response = await send(statusRequest);
+
+    expect(await response.json()).toEqual({
+      exists: false,
+      status: "open",
+      paintedPercent: 0,
+      freezes: [],
+      resetAt: null,
+    });
+  });
+
+  test("reports the status of the canvas", async () => {
+    const { canvas, send } = adminOfNewCanvas();
+    await send(createCanvasRequest);
+    await completeCanvas({ canvas, at: 1_000 });
+
+    const response = await send(statusRequest);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      exists: true,
+      status: "completed",
+      paintedPercent: 100,
+      resetAt: 1_000 + Number(env.RESET_AFTER_MS),
+    });
+  });
+
+  test("reports why the canvas is frozen, budget included", async () => {
+    const { canvas, send } = adminOfNewCanvas();
+    await send(createCanvasRequest);
+    await canvas.handleCommand(freezeCanvas({ reason: "budget" }));
+    await send(freezeRequest);
+
+    const response = await send(statusRequest);
+
+    expect(await response.json()).toMatchObject({
+      status: "frozen",
+      freezes: ["budget", "manual"],
+    });
   });
 
   test("answers 404 for an unknown admin route", async () => {

@@ -23,7 +23,7 @@ describe("API Worker", () => {
       method: "DELETE",
     });
 
-    expect(response.status).toBe(204);
+    expect(response.status).toBe(200);
   });
 
   test("forwards /api to the paint route", async () => {

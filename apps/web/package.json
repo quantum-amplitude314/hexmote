@@ -19,6 +19,7 @@
     "@orpc/client": "catalog:",
     "@orpc/contract": "catalog:",
     "@orpc/openapi-client": "catalog:",
+    "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
     "jose": "^6.2.13",
     "next": "16.4.1",

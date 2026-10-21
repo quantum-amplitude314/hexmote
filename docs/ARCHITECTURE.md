@@ -20,7 +20,8 @@ admin   ──▶ /admin web Worker entry  ─service binding─▶ API Worker  
 ```
 
 The API Worker has no public URL. `/api` and `/live` stay on the web host: first-party cookie, no
-CORS. `next dev` has no web Worker: it rewrites `/api` to the API, and `/live` goes to the API directly.
+CORS. `next dev` has no web Worker: it rewrites `/api` and `/admin/*` to the API, and `/live` goes
+to the API directly.
 
 Session: `GET /api/session` says who you are; without a session, Turnstile runs and
 `POST /api/session` sets a signed cookie. `/live` and painting need it.
@@ -34,7 +35,7 @@ Session: `GET /api/session` says who you are; without a session, Turnstile runs 
 | `packages/template` | build time: emoji PNG → template cells and palette |
 | `packages/contracts` | shared by api and web: live messages, the oRPC contract with Zod schemas |
 | `apps/api` | adapters: Canvas Durable Object, SQLite event store; Hono routes `/live`, `/admin`, `/api` |
-| `apps/web` | UI: Next.js with shadcn; paint on the live hex grid on `/`; `worker.ts` sends `/api`, `/live` and `/admin` to the API |
+| `apps/web` | UI: Next.js with shadcn; paint on the live hex grid on `/`, run admin commands on `/admin`; `worker.ts` sends `/api`, `/live` and `/admin/*` to the API |
 
 Dependencies point inward: api → application → domain.
 
