@@ -1,3 +1,4 @@
+export { type Contract, contract } from "./contract.ts";
 export {
   type LiveMessage,
   livePing,
@@ -5,4 +6,5 @@ export {
   type Painter,
   type PublicCanvasView,
 } from "./live.ts";
-export { type Contract, contract, type PaintResult, paintCellInputSchema } from "./paint.ts";
+export { type PaintResult, paintCellInputSchema } from "./paint.ts";
+export type { Session } from "./session.ts";

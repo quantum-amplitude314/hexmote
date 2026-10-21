@@ -23,6 +23,10 @@ The API Worker has no public URL (`workers_dev` and `preview_urls` off). `/api` 
 the web host, so the session cookie is first-party and no CORS is needed. `next dev` has no web
 Worker: it rewrites `/api` to the API, and the browser opens `/live` on the API directly.
 
+Session: the page asks `GET /api/session` who you are; without a session, Turnstile runs and
+`POST /api/session` sets a signed cookie. `/live` and painting need that session, so every viewer
+has a painter name.
+
 ## Layers
 
 | Package | Role |

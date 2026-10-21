@@ -1,18 +1,14 @@
-import { env } from "cloudflare:workers";
-import { cellA, cellOutside, cooldownMs, createCanvas, red } from "@hexmote/domain/testing";
+import { cellA, cellOutside, cooldownMs, red } from "@hexmote/domain/testing";
 import { describe, expect, test } from "vitest";
-import { createApp } from "./app.ts";
 import { completeCanvas } from "./testing/complete-canvas.ts";
 import { connectLive } from "./testing/live-client.ts";
+import { appOfNewCanvas, signedSessionCookie } from "./testing/test-app.ts";
 
-const sessionCookieName = "__Host-hexmote-session";
+const firstVisitor = "0b6f7a52-0c1e-4b8f-a3b5-6e0f5f3c9d11";
+const secondVisitor = "7d2c9e14-5a3b-4f6e-9c8d-2b1a0e4f7c35";
 
-const appOfNewCanvas = async () => {
-  const canvas = env.CANVAS.get(env.CANVAS.newUniqueId());
-  await canvas.handleCommand(createCanvas);
-  const app = createApp({ canvasOf: () => canvas });
-  const fetchApp = async (input: string, init?: RequestInit) =>
-    app.request(new URL(input, "http://hexmote"), init, env);
+const paintingApp = async () => {
+  const { canvas, fetchApp } = await appOfNewCanvas();
   const paint = async ({ body, cookie }: { body: unknown; cookie?: string }) => {
     const headers: HeadersInit = { "Content-Type": "application/json" };
     if (cookie) headers.Cookie = cookie;
@@ -24,26 +20,19 @@ const appOfNewCanvas = async () => {
 
     return response;
   };
-  const painting = { canvas, fetchApp, paint };
+  const painting = { canvas, fetchApp, paint, cookie: await signedSessionCookie(firstVisitor) };
 
   return painting;
-};
-
-const sessionCookieOf = (response: Response) => {
-  const setCookie = response.headers.get("Set-Cookie") ?? "";
-  const [sessionCookie = ""] = setCookie.split(";");
-
-  return sessionCookie;
 };
 
 const paintRed = { cell: cellA, color: red };
 
 describe("Paint route", () => {
   test("paints the cell and sends it to live viewers", async () => {
-    const { fetchApp, paint } = await appOfNewCanvas();
-    const client = await connectLive({ target: { fetch: fetchApp } });
+    const { fetchApp, paint, cookie } = await paintingApp();
+    const client = await connectLive({ target: { fetch: fetchApp }, cookie });
 
-    await paint({ body: paintRed });
+    await paint({ body: paintRed, cookie });
 
     expect(await client.nextMessageOf("cellPainted")).toMatchObject({
       type: "cellPainted",
@@ -55,10 +44,10 @@ describe("Paint route", () => {
   });
 
   test("answers when the next paint is allowed", async () => {
-    const { paint } = await appOfNewCanvas();
+    const { paint, cookie } = await paintingApp();
     const before = Date.now();
 
-    const response = await paint({ body: paintRed });
+    const response = await paint({ body: paintRed, cookie });
 
     const { status, nextPaintAt } = await response.json<{ status: string; nextPaintAt: number }>();
     expect(status).toBe("painted");
@@ -66,25 +55,24 @@ describe("Paint route", () => {
     expect(nextPaintAt).toBeLessThanOrEqual(Date.now() + cooldownMs);
   });
 
-  test("gives a new visitor a session cookie", async () => {
-    const { paint } = await appOfNewCanvas();
+  test("refuses to paint without a session", async () => {
+    const { paint } = await paintingApp();
 
     const response = await paint({ body: paintRed });
 
-    const setCookie = response.headers.get("Set-Cookie") ?? "";
-    expect(setCookie).toMatch(new RegExp(`^${sessionCookieName}=[0-9a-f-]{36};`));
-    expect(setCookie).toContain("HttpOnly");
-    expect(setCookie).toContain("Secure");
-    expect(setCookie).toContain("SameSite=Lax");
+    expect(response.status).toBe(401);
   });
 
   test("keeps the cooldown per session", async () => {
-    const { paint } = await appOfNewCanvas();
-    const first = await paint({ body: paintRed });
+    const { paint, cookie } = await paintingApp();
+    const first = await paint({ body: paintRed, cookie });
     const { nextPaintAt } = await first.json<{ nextPaintAt: number }>();
 
-    const again = await paint({ body: paintRed, cookie: sessionCookieOf(first) });
-    const otherVisitor = await paint({ body: paintRed });
+    const again = await paint({ body: paintRed, cookie });
+    const otherVisitor = await paint({
+      body: paintRed,
+      cookie: await signedSessionCookie(secondVisitor),
+    });
 
     expect(await again.json()).toEqual({
       status: "rejected",
@@ -93,27 +81,19 @@ describe("Paint route", () => {
     expect(await otherVisitor.json()).toMatchObject({ status: "painted" });
   });
 
-  test("replaces a session cookie that is not a session id", async () => {
-    const { paint } = await appOfNewCanvas();
-
-    const response = await paint({ body: paintRed, cookie: `${sessionCookieName}=forged` });
-
-    expect(sessionCookieOf(response)).toMatch(new RegExp(`^${sessionCookieName}=[0-9a-f-]{36}$`));
-  });
-
   test("rejects a body that is not a cell and a colour", async () => {
-    const { paint } = await appOfNewCanvas();
+    const { paint, cookie } = await paintingApp();
 
-    const response = await paint({ body: { cell: "a1", color: 12 } });
+    const response = await paint({ body: { cell: "a1", color: 12 }, cookie });
 
     expect(response.status).toBe(400);
   });
 
   test("reports a completed canvas", async () => {
-    const { canvas, paint } = await appOfNewCanvas();
+    const { canvas, paint, cookie } = await paintingApp();
     await completeCanvas({ canvas });
 
-    const response = await paint({ body: paintRed });
+    const response = await paint({ body: paintRed, cookie });
 
     expect(await response.json()).toEqual({
       status: "rejected",
@@ -122,9 +102,9 @@ describe("Paint route", () => {
   });
 
   test("reports a rejection from the canvas", async () => {
-    const { paint } = await appOfNewCanvas();
+    const { paint, cookie } = await paintingApp();
 
-    const response = await paint({ body: { cell: cellOutside, color: red } });
+    const response = await paint({ body: { cell: cellOutside, color: red }, cookie });
 
     expect(await response.json()).toEqual({
       status: "rejected",

@@ -3,7 +3,7 @@ import { oc } from "@orpc/contract";
 import { z } from "zod";
 
 const cellSchema = z.object({ axialQ: z.int(), axialR: z.int() });
-const hexCodeColorSchema = z.string().regex(/^#[0-9a-f]{6}$/);
+export const hexCodeColorSchema = z.string().regex(/^#[0-9a-f]{6}$/);
 
 export const paintCellInputSchema = z.object({ cell: cellSchema, color: hexCodeColorSchema });
 
@@ -25,11 +25,7 @@ export const paintResultSchema = z.discriminatedUnion("status", [
 
 export type PaintResult = z.infer<typeof paintResultSchema>;
 
-export const contract = {
-  paintCell: oc
-    .route({ method: "POST", path: "/paint", summary: "Paint one cell" })
-    .input(paintCellInputSchema)
-    .output(paintResultSchema),
-};
-
-export type Contract = typeof contract;
+export const paintCellContract = oc
+  .route({ method: "POST", path: "/paint", summary: "Paint one cell" })
+  .input(paintCellInputSchema)
+  .output(paintResultSchema);

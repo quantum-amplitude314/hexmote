@@ -1,3 +1,7 @@
-# Local overrides of wrangler.jsonc vars: a 1 s cooldown, a new round 1 min after completion
+# Local values: a 1 s cooldown, a new round 1 min after completion
 COOLDOWN_MS=1000
 RESET_AFTER_MS=60000
+# Any long random string locally; a Wrangler secret in prod
+SESSION_SIGNING_KEY=local-signing-key-change-me
+# Cloudflare's test secret: every token passes
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA

@@ -1,72 +1,45 @@
 import grinningFace from "@hexmote/template/grinning-face.json";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { ResponseHeadersPlugin } from "@orpc/server/plugins";
 import { Hono } from "hono";
-import { generateCookie, getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
-import { z } from "zod";
 import { handleAdminRequest } from "./admin.ts";
 import { type Canvas, sessionHeader } from "./canvas.ts";
-import { paintRouter } from "./paint.ts";
+import { router } from "./router.ts";
+import { sessionIdOf } from "./session-cookie.ts";
+import type { VerifyTurnstile } from "./turnstile.ts";
 
 type CanvasOf = (env: Env) => DurableObjectStub<Canvas>;
 
-type AppEnv = {
-  Bindings: Env;
-  Variables: { sessionId: string; newSessionCookie: string | null };
-};
+type AppEnv = { Bindings: Env; Variables: { sessionId: string | null } };
 
-const sessionCookie = "hexmote-session";
-const sessionMaxAgeSeconds = 60 * 60 * 24 * 30;
-const sessionIdSchema = z.uuid();
+const apiHandler = new OpenAPIHandler(router, { plugins: [new ResponseHeadersPlugin()] });
 
-const paintHandler = new OpenAPIHandler(paintRouter);
-
-const withSessionCookie = ({
-  response,
-  newSessionCookie,
-}: {
-  response: Response;
-  newSessionCookie: string | null;
-}) => {
-  if (!newSessionCookie) return response;
-  const headers = new Headers(response.headers);
-  headers.append("Set-Cookie", newSessionCookie);
-  const { status, statusText, webSocket } = response;
-  const withCookie = new Response(response.body, { status, statusText, headers, webSocket });
-
-  return withCookie;
-};
-
-// Anonymous until Turnstile and signing arrive; only a UUID is accepted, so ids stay small.
 const readSession = createMiddleware<AppEnv>(async (context, next) => {
-  const cookieValue = getCookie(context, sessionCookie, "host");
-  const { success: known, data: knownId } = sessionIdSchema.safeParse(cookieValue);
-  const sessionId = known ? knownId : crypto.randomUUID();
-  const newSessionCookie = known
-    ? null
-    : generateCookie(sessionCookie, sessionId, {
-        prefix: "host",
-        httpOnly: true,
-        sameSite: "Lax",
-        maxAge: sessionMaxAgeSeconds,
-      });
+  const sessionId = await sessionIdOf({ context, signingKey: context.env.SESSION_SIGNING_KEY });
   context.set("sessionId", sessionId);
-  context.set("newSessionCookie", newSessionCookie);
   await next();
 });
 
-export const createApp = ({ canvasOf }: { canvasOf: CanvasOf }) => {
+export const createApp = ({
+  canvasOf,
+  verifyTurnstile,
+}: {
+  canvasOf: CanvasOf;
+  verifyTurnstile: VerifyTurnstile;
+}) => {
   const app = new Hono<AppEnv>();
   app.use("/live", readSession);
   app.use("/api/*", readSession);
 
   app.get("/live", async (context) => {
+    const sessionId = context.get("sessionId");
+    if (!sessionId) return context.text("A session is needed", 401);
     const { raw } = context.req;
     const headers = new Headers(raw.headers);
-    headers.set(sessionHeader, context.get("sessionId"));
-    const response = await canvasOf(context.env).fetch(new Request(raw, { headers }));
+    headers.set(sessionHeader, sessionId);
 
-    return withSessionCookie({ response, newSessionCookie: context.get("newSessionCookie") });
+    return canvasOf(context.env).fetch(new Request(raw, { headers }));
   });
 
   app.all("/admin/*", (context) =>
@@ -79,17 +52,24 @@ export const createApp = ({ canvasOf }: { canvasOf: CanvasOf }) => {
 
   app.all("/api/*", async (context) => {
     const { env } = context;
-    const { matched, response } = await paintHandler.handle(context.req.raw, {
+    const { raw } = context.req;
+    const { matched, response } = await apiHandler.handle(raw, {
       prefix: "/api",
       context: {
         canvas: canvasOf(env),
         sessionId: context.get("sessionId"),
         cooldownMs: Number(env.COOLDOWN_MS),
+        signingKey: env.SESSION_SIGNING_KEY,
+        passesTurnstile: (token) =>
+          verifyTurnstile({
+            token,
+            secret: env.TURNSTILE_SECRET_KEY,
+            remoteIp: raw.headers.get("CF-Connecting-IP"),
+          }),
       },
     });
-    if (!matched) return context.notFound();
 
-    return withSessionCookie({ response, newSessionCookie: context.get("newSessionCookie") });
+    return matched ? response : context.notFound();
   });
 
   return app;

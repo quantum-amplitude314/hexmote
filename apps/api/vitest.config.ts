@@ -7,7 +7,12 @@ export default defineConfig({
     cloudflareTest({
       wrangler: { configPath: "./wrangler.jsonc" },
       miniflare: {
-        bindings: { COOLDOWN_MS: String(cooldownMs), RESET_AFTER_MS: String(resetAfterMs) },
+        bindings: {
+          COOLDOWN_MS: String(cooldownMs),
+          RESET_AFTER_MS: String(resetAfterMs),
+          SESSION_SIGNING_KEY: "test-signing-key",
+          TURNSTILE_SECRET_KEY: "test-turnstile-secret",
+        },
       },
     }),
   ],
