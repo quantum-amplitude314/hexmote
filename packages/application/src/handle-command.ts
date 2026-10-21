@@ -1,6 +1,5 @@
-import type { CanvasCommand, Decision } from "@hexmote/domain";
+import { type CanvasCommand, type Decision, decide, replay } from "@hexmote/domain";
 import type { EventStore } from "./event-store.ts";
-import { notImplemented } from "./not-implemented.ts";
 
 type HandleCommand = (input: {
   store: EventStore;
@@ -9,4 +8,12 @@ type HandleCommand = (input: {
 }) => Promise<Decision>;
 
 /** Read the stream, replay it, decide, and append the accepted events. */
-export const handleCommand: HandleCommand = () => notImplemented();
+export const handleCommand: HandleCommand = async ({ store, command, cooldownMs }) => {
+  const { events, version } = await store.read();
+  const decision = decide({ state: replay(events), command, cooldownMs });
+  if (decision.status === "accepted" && decision.events.length > 0) {
+    await store.append({ events: decision.events, expectedVersion: version });
+  }
+
+  return decision;
+};
