@@ -10,6 +10,8 @@ import {
 import { type LiveMessage, liveMessageFor, snapshotOf } from "./live.ts";
 import { createSqliteEventStore } from "./sqlite-event-store.ts";
 
+export type DeleteResult = { status: "deleted" } | { status: "refused"; reason: "budgetFreeze" };
+
 /** RPC reaches public prototype methods only; `#` members stay out of it. */
 export class Canvas extends DurableObject<Env> {
   #store = createSqliteEventStore(this.ctx.storage);
@@ -37,6 +39,22 @@ export class Canvas extends DurableObject<Env> {
     }
 
     return this.#view;
+  }
+
+  async deleteCanvas() {
+    const { freezes } = await this.getView();
+    if (freezes.includes("budget")) {
+      const refused: DeleteResult = { status: "refused", reason: "budgetFreeze" };
+
+      return refused;
+    }
+    await this.ctx.storage.deleteAll();
+    // deleteAll drops the events table too; the new store creates it again.
+    this.#store = createSqliteEventStore(this.ctx.storage);
+    this.#view = null;
+    const deleted: DeleteResult = { status: "deleted" };
+
+    return deleted;
   }
 
   override async fetch(request: Request) {

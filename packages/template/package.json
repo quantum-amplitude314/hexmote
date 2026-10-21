@@ -5,7 +5,8 @@
   "type": "module",
   "packageManager": "bun@1.4.2",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./grinning-face.json": "./generated/grinning-face.json"
   },
   "scripts": {
     "test": "bun test",

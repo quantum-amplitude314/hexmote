@@ -16,6 +16,7 @@
       "dependencies": {
         "@hexmote/application": "workspace:*",
         "@hexmote/domain": "workspace:*",
+        "@hexmote/template": "workspace:*",
       },
       "devDependencies": {
         "@cloudflare/vitest-plugin": "^1.4.6",
