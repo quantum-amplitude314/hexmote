@@ -9,8 +9,8 @@ import { HexGrid } from "./hex-grid";
 import { OnlineBar } from "./online-bar";
 
 export function LiveCanvas() {
-  const { view, you, online, recentPaints } = useLiveView();
-  const { paint, cooldown, message } = usePaint();
+  const { view, you, online, recentPaints, connected } = useLiveView();
+  const { paint, statusText } = usePaint();
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   if (!view) return <p>Connecting…</p>;
   const { palette, cells, paintedPercent, status, resetAt } = view;
@@ -20,7 +20,7 @@ export function LiveCanvas() {
 
   return (
     <section className="grid justify-items-center gap-3">
-      <OnlineBar you={you} online={online} />
+      <OnlineBar you={you} online={online} connected={connected} />
       <CanvasProgress paintedPercent={paintedPercent} status={status} resetAt={resetAt} />
       <div className="py-5">
         <HexGrid
@@ -31,8 +31,7 @@ export function LiveCanvas() {
       </div>
       <ColorPalette palette={palette} selected={color} onSelect={setSelectedColor} />
       <p className="text-sm" aria-live="polite">
-        {cooldown}
-        {message && ` · ${message}`}
+        {statusText}
       </p>
     </section>
   );

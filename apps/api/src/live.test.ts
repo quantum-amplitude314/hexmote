@@ -1,5 +1,6 @@
 import { evictDurableObject, runDurableObjectAlarm } from "cloudflare:test";
 import { env } from "cloudflare:workers";
+import { livePing, livePong } from "@hexmote/contracts";
 import { type CanvasEvent, replayCanvasView } from "@hexmote/domain";
 import {
   canvasCreated,
@@ -197,6 +198,15 @@ describe("Canvas live updates", () => {
     await env.CANVAS.get(id).handleCommand(paintCell({ cell: cellA, color: red }));
 
     expect(await client.nextMessage()).toMatchObject({ type: "cellPainted", cell: cellA });
+  });
+
+  test("answers a ping with a pong", async () => {
+    const canvas = await createdCanvas();
+    const client = await connectPastGreeting({ canvas });
+
+    client.send(livePing);
+
+    expect(await client.nextText()).toBe(livePong);
   });
 
   test("answers a request without a WebSocket upgrade with 426", async () => {

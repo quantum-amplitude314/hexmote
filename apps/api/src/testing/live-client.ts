@@ -21,23 +21,31 @@ export const connectLive = async ({
   const { webSocket } = response;
   if (!webSocket) throw new Error(`Expected a WebSocket, got status ${response.status}`);
 
-  const received: LiveMessage[] = [];
-  const waiting: ((message: LiveMessage) => void)[] = [];
+  const received: string[] = [];
+  const waiting: ((data: string) => void)[] = [];
   webSocket.addEventListener("message", ({ data }) => {
-    const message = JSON.parse(String(data)) as LiveMessage;
+    const text = String(data);
     const resolve = waiting.shift();
-    if (resolve) resolve(message);
-    else received.push(message);
+    if (resolve) resolve(text);
+    else received.push(text);
   });
   webSocket.accept();
 
-  const nextMessage = () => {
+  /** The raw frame, for frames that are not JSON messages, like the pong. */
+  const nextText = () => {
     const queued = received.shift();
-    const next = queued
-      ? Promise.resolve(queued)
-      : new Promise<LiveMessage>((resolve) => waiting.push(resolve));
+    const next =
+      queued === undefined
+        ? new Promise<string>((resolve) => waiting.push(resolve))
+        : Promise.resolve(queued);
 
     return next;
+  };
+
+  const nextMessage = async () => {
+    const message = JSON.parse(await nextText()) as LiveMessage;
+
+    return message;
   };
 
   /** Skips other messages, such as presence updates from other viewers joining. */
@@ -51,8 +59,10 @@ export const connectLive = async ({
 
   const client = {
     response,
+    nextText,
     nextMessage,
     nextMessageOf,
+    send: (text: string) => webSocket.send(text),
     close: () => webSocket.close(1000, "test done"),
   };
 

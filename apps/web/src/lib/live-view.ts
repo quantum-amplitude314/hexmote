@@ -8,11 +8,21 @@ export type LiveState = {
   you: Painter | null;
   online: Painter[];
   recentPaints: RecentPaint[];
+  connected: boolean;
 };
 
-export const emptyLiveState: LiveState = { view: null, you: null, online: [], recentPaints: [] };
+export const emptyLiveState: LiveState = {
+  view: null,
+  you: null,
+  online: [],
+  recentPaints: [],
+  connected: false,
+};
 
-type ApplyLiveMessage = (input: { state: LiveState; message: LiveMessage }) => LiveState;
+/** A message from the server, or the client noticing the connection dropped. */
+export type LiveUpdate = LiveMessage | { type: "disconnected" };
+
+type ApplyLiveUpdate = (input: { state: LiveState; update: LiveUpdate }) => LiveState;
 
 type CellPaintedMessage = Extract<LiveMessage, { type: "cellPainted" }>;
 
@@ -61,22 +71,24 @@ const paintedState = ({ state, message }: { state: LiveState; message: CellPaint
   return painted;
 };
 
-export const applyLiveMessage: ApplyLiveMessage = ({ state, message }) => {
-  switch (message.type) {
+export const applyLiveUpdate: ApplyLiveUpdate = ({ state, update }) => {
+  switch (update.type) {
     case "snapshot":
-      return { ...state, view: message.view };
+      return { ...state, view: update.view, connected: true };
     case "welcome":
-      return { ...state, you: message.you };
+      return { ...state, you: update.you };
     case "presence":
-      return { ...state, online: message.online };
+      return { ...state, online: update.online };
     case "cellPainted":
-      return paintedState({ state, message });
+      return paintedState({ state, message: update });
     case "status": {
-      const { status, resetAt } = message;
+      const { status, resetAt } = update;
 
       return state.view ? { ...state, view: { ...state.view, status, resetAt } } : state;
     }
+    case "disconnected":
+      return { ...state, online: [], connected: false };
     default:
-      return message satisfies never;
+      return update satisfies never;
   }
 };

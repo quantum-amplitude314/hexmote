@@ -17,3 +17,7 @@ export type LiveMessage =
       painter: Painter;
     }
   | { type: "status"; status: CanvasView["status"]; resetAt: CanvasView["resetAt"] };
+
+/** Heartbeat frames: plain text, not a `LiveMessage`; answered without waking the Canvas. */
+export const livePing = "ping";
+export const livePong = "pong";

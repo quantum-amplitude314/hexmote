@@ -1,11 +1,15 @@
 import type { PaintResult } from "@hexmote/contracts";
 import type { Rejection } from "@hexmote/domain";
 
-export type PaintStatus = { nextPaintAt: number | null; message: string };
+export type PaintStatus = { nextPaintAt: number | null; message: string; messageUntil: number };
 
-type AfterPaint = (input: { result: PaintResult; nextPaintAt: number | null }) => PaintStatus;
+export const idlePaintStatus: PaintStatus = { nextPaintAt: null, message: "", messageUntil: 0 };
+
+type AfterPaint = (input: { result: PaintResult; status: PaintStatus; now: number }) => PaintStatus;
 
 type CooldownText = (input: { nextPaintAt: number | null; now: number }) => string;
+
+const messageShownMs = 3000;
 
 export const rejectionText = (rejection: Rejection) => {
   switch (rejection.reason) {
@@ -30,15 +34,29 @@ export const rejectionText = (rejection: Rejection) => {
   }
 };
 
-export const afterPaint: AfterPaint = ({ result, nextPaintAt }) => {
-  if (result.status === "painted") {
-    const painted: PaintStatus = { nextPaintAt: result.nextPaintAt, message: "Painted" };
+/** A message stays while the cooldown runs, and at least 3 s. */
+export const withMessage = ({
+  nextPaintAt,
+  message,
+  now,
+}: {
+  nextPaintAt: number | null;
+  message: string;
+  now: number;
+}) => {
+  const messageUntil = Math.max(nextPaintAt ?? now, now + messageShownMs);
+  const status: PaintStatus = { nextPaintAt, message, messageUntil };
 
-    return painted;
+  return status;
+};
+
+export const afterPaint: AfterPaint = ({ result, status, now }) => {
+  if (result.status === "painted") {
+    return withMessage({ nextPaintAt: result.nextPaintAt, message: "Painted", now });
   }
   const { rejection } = result;
-  const retryAt = rejection.reason === "cooldown" ? rejection.retryAt : nextPaintAt;
-  const rejected: PaintStatus = { nextPaintAt: retryAt, message: rejectionText(rejection) };
+  const retryAt = rejection.reason === "cooldown" ? rejection.retryAt : status.nextPaintAt;
+  const rejected = withMessage({ nextPaintAt: retryAt, message: rejectionText(rejection), now });
 
   return rejected;
 };
@@ -48,4 +66,12 @@ export const cooldownText: CooldownText = ({ nextPaintAt, now }) => {
   const secondsLeft = Math.ceil((nextPaintAt - now) / 1000);
 
   return `Next paint in ${secondsLeft} s`;
+};
+
+export const paintStatusText = ({ status, now }: { status: PaintStatus; now: number }) => {
+  const { nextPaintAt, message, messageUntil } = status;
+  const cooldown = cooldownText({ nextPaintAt, now });
+  const text = message && now < messageUntil ? `${cooldown} · ${message}` : cooldown;
+
+  return text;
 };

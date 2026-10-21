@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Painter, PublicCanvasView } from "@hexmote/contracts";
-import { applyLiveMessage, emptyLiveState, type LiveState } from "./live-view";
+import { applyLiveUpdate, emptyLiveState, type LiveState } from "./live-view";
 
 const cellA = { axialQ: 0, axialR: 0 };
 const cellB = { axialQ: 1, axialR: 0 };
@@ -19,23 +19,29 @@ const view: PublicCanvasView = {
   resetAt: null,
 };
 
-const watching: LiveState = { ...emptyLiveState, view, you: blueFox };
+const watching: LiveState = {
+  ...emptyLiveState,
+  view,
+  you: blueFox,
+  online: [blueFox],
+  connected: true,
+};
 
 const paintedBy = (painter: Painter) =>
   ({ type: "cellPainted", cell: cellA, color: red, paintedPercent: 50, painter }) as const;
 
 describe("applyLiveMessage", () => {
   test("replaces the view with a snapshot", () => {
-    const state = applyLiveMessage({
+    const state = applyLiveUpdate({
       state: emptyLiveState,
-      message: { type: "snapshot", view },
+      update: { type: "snapshot", view },
     });
 
     expect(state.view).toEqual(view);
   });
 
   test("paints the cell and takes the new painted share", () => {
-    const state = applyLiveMessage({ state: watching, message: paintedBy(redOwl) });
+    const state = applyLiveUpdate({ state: watching, update: paintedBy(redOwl) });
 
     expect(state.view).toEqual({
       ...view,
@@ -48,9 +54,9 @@ describe("applyLiveMessage", () => {
   });
 
   test("changes only the status on a status message", () => {
-    const state = applyLiveMessage({
+    const state = applyLiveUpdate({
       state: watching,
-      message: { type: "status", status: "frozen", resetAt: null },
+      update: { type: "status", status: "frozen", resetAt: null },
     });
 
     expect(state.view).toEqual({ ...view, status: "frozen" });
@@ -59,44 +65,56 @@ describe("applyLiveMessage", () => {
   test("takes the time of the new round from a completed status", () => {
     const resetAt = Date.UTC(2026, 9, 22, 18);
 
-    const state = applyLiveMessage({
+    const state = applyLiveUpdate({
       state: watching,
-      message: { type: "status", status: "completed", resetAt },
+      update: { type: "status", status: "completed", resetAt },
     });
 
     expect(state.view).toEqual({ ...view, status: "completed", resetAt });
   });
 
+  test("is connected from the first snapshot", () => {
+    const state = applyLiveUpdate({ state: emptyLiveState, update: { type: "snapshot", view } });
+
+    expect(state.connected).toBe(true);
+  });
+
+  test("shows a dropped connection with nobody online and keeps the last view", () => {
+    const state = applyLiveUpdate({ state: watching, update: { type: "disconnected" } });
+
+    expect(state).toEqual({ ...watching, online: [], connected: false });
+  });
+
   test("ignores updates before the first snapshot", () => {
-    const state = applyLiveMessage({
+    const state = applyLiveUpdate({
       state: emptyLiveState,
-      message: { type: "status", status: "frozen", resetAt: null },
+      update: { type: "status", status: "frozen", resetAt: null },
     });
 
     expect(state.view).toBeNull();
   });
 
   test("remembers who you are from the welcome", () => {
-    const state = applyLiveMessage({
+    const state = applyLiveUpdate({
       state: emptyLiveState,
-      message: { type: "welcome", you: blueFox },
+      update: { type: "welcome", you: blueFox },
     });
 
     expect(state.you).toEqual(blueFox);
   });
 
   test("replaces the online list", () => {
-    const state = applyLiveMessage({
+    const state = applyLiveUpdate({
       state: watching,
-      message: { type: "presence", online: [blueFox, redOwl] },
+      update: { type: "presence", online: [blueFox, redOwl] },
     });
 
     expect(state.online).toEqual([blueFox, redOwl]);
   });
 
   test("keeps other people's paints for the pulse, newest last", () => {
-    const once = applyLiveMessage({ state: watching, message: paintedBy(redOwl) });
-    const twice = applyLiveMessage({ state: once, message: paintedBy(redOwl) });
+    const once = applyLiveUpdate({ state: watching, update: paintedBy(redOwl) });
+    const twice = applyLiveUpdate({ state: once, update: paintedBy(redOwl) });
 
     expect(twice.recentPaints).toEqual([
       { id: 1, cell: cellA, painter: redOwl },
@@ -105,7 +123,7 @@ describe("applyLiveMessage", () => {
   });
 
   test("does not pulse your own paints", () => {
-    const state = applyLiveMessage({ state: watching, message: paintedBy(blueFox) });
+    const state = applyLiveUpdate({ state: watching, update: paintedBy(blueFox) });
 
     expect(state.recentPaints).toEqual([]);
   });

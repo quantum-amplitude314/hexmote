@@ -1,6 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { handleCommand } from "@hexmote/application";
-import type { LiveMessage } from "@hexmote/contracts";
+import { type LiveMessage, livePing, livePong } from "@hexmote/contracts";
 import {
   type CanvasCommand,
   type CanvasConfig,
@@ -39,6 +39,11 @@ export class Canvas extends DurableObject<Env> {
     resetAfterMs: Number(this.env.RESET_AFTER_MS),
   };
   #view: CanvasView | null = null;
+
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(livePing, livePong));
+  }
 
   async handleCommand(command: CanvasCommand) {
     const decision = await handleCommand({

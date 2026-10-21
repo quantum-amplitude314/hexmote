@@ -45,6 +45,9 @@ One canvas = one Durable Object = one event stream.
 - Read model: `CanvasView` in memory, updated right after each append, so never behind the stream
 - `/live`: hibernatable WebSockets; on connect a snapshot and a welcome with the viewer's painter
   name, then one message per event; session ids and freeze reasons stay inside
+- Heartbeat: the page sends `ping` every 25 s and the runtime answers `pong` without waking the
+  Canvas; after a drop or a missed pong the page reconnects (1 s, doubling to 30 s) and gets a fresh
+  snapshot
 - Presence: the online list goes to everyone when someone joins or leaves; it comes from the open
   WebSockets, not from events, so it is never stored
 - Rounds: `CanvasCompleted` sets an alarm at `resetAt`; the alarm wipes the stream and records the
