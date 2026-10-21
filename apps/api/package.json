@@ -5,8 +5,8 @@
   "type": "module",
   "packageManager": "bun@1.4.2",
   "scripts": {
-    "dev": "wrangler dev",
-    "preview": "wrangler dev",
+    "dev": "wrangler dev --var COOLDOWN_MS:1000",
+    "preview": "wrangler dev --var COOLDOWN_MS:1000",
     "types": "wrangler types",
     "test": "vitest run",
     "typecheck": "wrangler types && tsc --noEmit"
@@ -15,7 +15,11 @@
     "@hexmote/application": "workspace:*",
     "@hexmote/contracts": "workspace:*",
     "@hexmote/domain": "workspace:*",
-    "@hexmote/template": "workspace:*"
+    "@hexmote/template": "workspace:*",
+    "@orpc/openapi": "catalog:",
+    "@orpc/server": "catalog:",
+    "hono": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "^1.4.6",

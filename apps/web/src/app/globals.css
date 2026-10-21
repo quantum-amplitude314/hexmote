@@ -25,6 +25,16 @@
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
+  --animate-paint-pulse: paint-pulse 2.5s ease-out forwards;
+
+  @keyframes paint-pulse {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
 }
 
 :root {

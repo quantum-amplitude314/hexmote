@@ -1,6 +1,6 @@
-import type { LiveMessage, PublicCanvasView } from "@hexmote/contracts";
+import type { LiveMessage } from "@hexmote/contracts";
 import { useEffect, useReducer } from "react";
-import { applyLiveMessage } from "./live-view";
+import { applyLiveMessage, emptyLiveState, type LiveState } from "./live-view";
 
 const sameOriginLiveUrl = () => {
   const protocol = location.protocol === "https:" ? "wss:" : "ws:";
@@ -9,10 +9,9 @@ const sameOriginLiveUrl = () => {
 };
 
 export const useLiveView = () => {
-  const [view, dispatch] = useReducer(
-    (current: PublicCanvasView | null, message: LiveMessage) =>
-      applyLiveMessage({ view: current, message }),
-    null,
+  const [state, dispatch] = useReducer(
+    (current: LiveState, message: LiveMessage) => applyLiveMessage({ state: current, message }),
+    emptyLiveState,
   );
   useEffect(() => {
     const socket = new WebSocket(process.env.NEXT_PUBLIC_LIVE_URL ?? sameOriginLiveUrl());
@@ -21,5 +20,5 @@ export const useLiveView = () => {
     return () => socket.close();
   }, []);
 
-  return view;
+  return state;
 };

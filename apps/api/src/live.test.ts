@@ -9,8 +9,11 @@ import {
   freezeCanvas,
   paintCell,
   red,
+  s1,
+  s2,
 } from "@hexmote/domain/testing";
 import { afterEach, describe, expect, test } from "vitest";
+import { painterOf } from "./painter.ts";
 import { connectLive } from "./testing/live-client.ts";
 
 const publicViewOf = (events: CanvasEvent[]) => {
@@ -19,9 +22,11 @@ const publicViewOf = (events: CanvasEvent[]) => {
   return view;
 };
 
+type Viewer = { canvas: DurableObjectStub; sessionId?: string };
+
 const clients: Awaited<ReturnType<typeof connectLive>>[] = [];
-const connect = async (target: Parameters<typeof connectLive>[0]) => {
-  const client = await connectLive(target);
+const connect = async ({ canvas, sessionId = s1 }: Viewer) => {
+  const client = await connectLive({ target: canvas, sessionId });
   clients.push(client);
 
   return client;
@@ -34,9 +39,10 @@ const createdCanvas = async () => {
   return canvas;
 };
 
-const connectPastSnapshot = async (target: Parameters<typeof connectLive>[0]) => {
-  const client = await connect(target);
-  await client.nextMessage();
+/** Past the greeting: the snapshot, the welcome and the online list. */
+const connectPastGreeting = async (viewer: Viewer) => {
+  const client = await connect(viewer);
+  await client.nextMessageOf("presence");
 
   return client;
 };
@@ -49,7 +55,7 @@ describe("Canvas live updates", () => {
   test("sends a snapshot of the public view on connect", async () => {
     const canvas = await createdCanvas();
 
-    const client = await connect(canvas);
+    const client = await connect({ canvas });
 
     expect(await client.nextMessage()).toEqual({
       type: "snapshot",
@@ -57,9 +63,55 @@ describe("Canvas live updates", () => {
     });
   });
 
+  test("welcomes a viewer with their painter name", async () => {
+    const canvas = await createdCanvas();
+    const client = await connect({ canvas, sessionId: s1 });
+    await client.nextMessage();
+
+    expect(await client.nextMessage()).toEqual({ type: "welcome", you: painterOf(s1) });
+  });
+
+  test("sends everyone the online list by name when someone joins", async () => {
+    const canvas = await createdCanvas();
+    const first = await connectPastGreeting({ canvas, sessionId: s1 });
+
+    await connect({ canvas, sessionId: s2 });
+
+    const byName = [painterOf(s1), painterOf(s2)].toSorted((one, other) =>
+      one.name.localeCompare(other.name),
+    );
+    expect(await first.nextMessageOf("presence")).toEqual({ type: "presence", online: byName });
+  });
+
+  test("counts a painter with two tabs once", async () => {
+    const canvas = await createdCanvas();
+    const first = await connectPastGreeting({ canvas, sessionId: s1 });
+
+    await connect({ canvas, sessionId: s1 });
+
+    expect(await first.nextMessageOf("presence")).toEqual({
+      type: "presence",
+      online: [painterOf(s1)],
+    });
+  });
+
+  test("updates the online list when someone leaves", async () => {
+    const canvas = await createdCanvas();
+    const first = await connectPastGreeting({ canvas, sessionId: s1 });
+    const second = await connectPastGreeting({ canvas, sessionId: s2 });
+    await first.nextMessageOf("presence");
+
+    second.close();
+
+    expect(await first.nextMessageOf("presence")).toEqual({
+      type: "presence",
+      online: [painterOf(s1)],
+    });
+  });
+
   test("broadcasts a snapshot when the canvas is created", async () => {
     const canvas = env.CANVAS.get(env.CANVAS.newUniqueId());
-    const client = await connectPastSnapshot(canvas);
+    const client = await connectPastGreeting({ canvas });
 
     await canvas.handleCommand(createCanvas);
 
@@ -69,21 +121,27 @@ describe("Canvas live updates", () => {
     });
   });
 
-  test("broadcasts a painted cell with the new completion to every client", async () => {
+  test("broadcasts a painted cell with its painter and the new completion to every client", async () => {
     const canvas = await createdCanvas();
-    const first = await connectPastSnapshot(canvas);
-    const second = await connectPastSnapshot(canvas);
+    const first = await connectPastGreeting({ canvas, sessionId: s1 });
+    const second = await connectPastGreeting({ canvas, sessionId: s2 });
 
-    await canvas.handleCommand(paintCell({ cell: cellA, color: red }));
+    await canvas.handleCommand(paintCell({ cell: cellA, color: red, sessionId: s2 }));
 
-    const painted = { type: "cellPainted", cell: cellA, color: red, completionPercent: 25 };
-    expect(await first.nextMessage()).toEqual(painted);
-    expect(await second.nextMessage()).toEqual(painted);
+    const painted = {
+      type: "cellPainted",
+      cell: cellA,
+      color: red,
+      completionPercent: 25,
+      painter: painterOf(s2),
+    };
+    expect(await first.nextMessageOf("cellPainted")).toEqual(painted);
+    expect(await second.nextMessageOf("cellPainted")).toEqual(painted);
   });
 
   test("broadcasts the status without the freeze reason", async () => {
     const canvas = await createdCanvas();
-    const client = await connectPastSnapshot(canvas);
+    const client = await connectPastGreeting({ canvas });
 
     await canvas.handleCommand(freezeCanvas({ reason: "budget" }));
 
@@ -92,7 +150,7 @@ describe("Canvas live updates", () => {
 
   test("sends nothing for a rejected command", async () => {
     const canvas = await createdCanvas();
-    const client = await connectPastSnapshot(canvas);
+    const client = await connectPastGreeting({ canvas });
 
     await canvas.handleCommand(paintCell({ cell: cellOutside, color: red }));
     await canvas.handleCommand(paintCell({ cell: cellA, color: red }));
@@ -103,7 +161,7 @@ describe("Canvas live updates", () => {
   test("keeps broadcasting after the Durable Object hibernates", async () => {
     const id = env.CANVAS.newUniqueId();
     await env.CANVAS.get(id).handleCommand(createCanvas);
-    const client = await connectPastSnapshot(env.CANVAS.get(id));
+    const client = await connectPastGreeting({ canvas: env.CANVAS.get(id) });
     await evictDurableObject(env.CANVAS.get(id));
 
     await env.CANVAS.get(id).handleCommand(paintCell({ cell: cellA, color: red }));

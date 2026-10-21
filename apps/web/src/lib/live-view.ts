@@ -1,12 +1,22 @@
-import type { LiveMessage, PublicCanvasView } from "@hexmote/contracts";
-import { cellKey } from "@hexmote/domain";
+import type { LiveMessage, Painter, PublicCanvasView } from "@hexmote/contracts";
+import { type Cell, cellKey } from "@hexmote/domain";
 
-type ApplyLiveMessage = (input: {
+export type RecentPaint = { id: number; cell: Cell; painter: Painter };
+
+export type LiveState = {
   view: PublicCanvasView | null;
-  message: LiveMessage;
-}) => PublicCanvasView | null;
+  you: Painter | null;
+  online: Painter[];
+  recentPaints: RecentPaint[];
+};
+
+export const emptyLiveState: LiveState = { view: null, you: null, online: [], recentPaints: [] };
+
+type ApplyLiveMessage = (input: { state: LiveState; message: LiveMessage }) => LiveState;
 
 type CellPaintedMessage = Extract<LiveMessage, { type: "cellPainted" }>;
+
+const maxRecentPaints = 8;
 
 const paintedView = ({
   view,
@@ -28,14 +38,41 @@ const paintedView = ({
   return painted;
 };
 
-export const applyLiveMessage: ApplyLiveMessage = ({ view, message }) => {
-  if (message.type === "snapshot") return message.view;
-  if (!view) return null;
+/** Only other people's paints pulse; ids keep each pulse its own animation. */
+const withRecentPaint = ({ state, message }: { state: LiveState; message: CellPaintedMessage }) => {
+  const { cell, painter } = message;
+  const { you, recentPaints } = state;
+  if (painter.name === you?.name) return recentPaints;
+  const lastId = recentPaints.at(-1)?.id ?? 0;
+  const recent = [...recentPaints, { id: lastId + 1, cell, painter }].slice(-maxRecentPaints);
+
+  return recent;
+};
+
+const paintedState = ({ state, message }: { state: LiveState; message: CellPaintedMessage }) => {
+  const { view } = state;
+  if (!view) return state;
+  const painted: LiveState = {
+    ...state,
+    view: paintedView({ view, message }),
+    recentPaints: withRecentPaint({ state, message }),
+  };
+
+  return painted;
+};
+
+export const applyLiveMessage: ApplyLiveMessage = ({ state, message }) => {
   switch (message.type) {
+    case "snapshot":
+      return { ...state, view: message.view };
+    case "welcome":
+      return { ...state, you: message.you };
+    case "presence":
+      return { ...state, online: message.online };
     case "cellPainted":
-      return paintedView({ view, message });
+      return paintedState({ state, message });
     case "status":
-      return { ...view, status: message.status };
+      return state.view ? { ...state, view: { ...state.view, status: message.status } } : state;
     default:
       return message satisfies never;
   }

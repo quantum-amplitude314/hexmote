@@ -19,5 +19,8 @@ bun run dev                                          # API on :8787, web on :300
 curl -X POST localhost:8787/admin/canvas             # create the 😀 canvas, once
 ```
 
-Open http://localhost:3000. `bun run preview` runs the web Worker itself on :3000, so `/live` and
-`/admin/*` go through it to the API.
+Open http://localhost:3000, pick a colour and click a cell; the cooldown is 1 s locally. A private
+window is a second painter: both appear online, and each sees the other's paints pulse with a name.
+
+`bun run preview` runs the web Worker itself on :3000, so `/api`, `/live` and `/admin/*` go through
+it to the API.

@@ -5,7 +5,7 @@ import { connectLive } from "./testing/live-client.ts";
 
 describe("API Worker", () => {
   test("forwards /live to the canvas", async () => {
-    const client = await connectLive(exports.default);
+    const client = await connectLive({ target: exports.default });
 
     const { freezes: _freezes, ...view } = emptyCanvasView;
     expect(await client.nextMessage()).toEqual({ type: "snapshot", view });
@@ -18,5 +18,18 @@ describe("API Worker", () => {
     });
 
     expect(response.status).toBe(204);
+  });
+
+  test("forwards /api to the paint route", async () => {
+    const response = await exports.default.fetch("http://hexmote/api/paint", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cell: { axialQ: 0, axialR: 0 }, color: "#e50000" }),
+    });
+
+    expect(await response.json()).toEqual({
+      status: "rejected",
+      rejection: { reason: "noCanvas" },
+    });
   });
 });

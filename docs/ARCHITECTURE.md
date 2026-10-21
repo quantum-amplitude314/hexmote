@@ -13,13 +13,15 @@
 ## Flow
 
 ```
-browser ──────▶ web Worker (Next.js) ─service binding─▶ API Worker (Hono) ─RPC─▶ Canvas Durable Object
-browser ⇄ /live web Worker entry     ─service binding─▶ API Worker        ─────▶ Canvas Durable Object
-admin   ──▶ /admin web Worker entry  ─service binding─▶ API Worker        ─RPC─▶ Canvas Durable Object
+browser ──────▶ web Worker (Next.js)  pages
+browser ──▶ /api web Worker entry    ─service binding─▶ API Worker (Hono, oRPC) ─RPC─▶ Canvas Durable Object
+browser ⇄ /live web Worker entry     ─service binding─▶ API Worker              ─────▶ Canvas Durable Object
+admin   ──▶ /admin web Worker entry  ─service binding─▶ API Worker              ─RPC─▶ Canvas Durable Object
 ```
 
-The API Worker has no public URL (`workers_dev` and `preview_urls` off). `/live` stays on the web
-host, so the session cookie is first-party and no CORS is needed.
+The API Worker has no public URL (`workers_dev` and `preview_urls` off). `/api` and `/live` stay on
+the web host, so the session cookie is first-party and no CORS is needed. `next dev` has no web
+Worker: it rewrites `/api` to the API, and the browser opens `/live` on the API directly.
 
 ## Layers
 
@@ -28,9 +30,9 @@ host, so the session cookie is first-party and no CORS is needed.
 | `packages/domain` | core: deciders and views, pure; laid out by slice, tests next to the code |
 | `packages/application` | `handleCommand` and the `EventStore` port |
 | `packages/template` | build time: emoji PNG → template cells and palette |
-| `packages/contracts` | types shared by api and web: live messages |
-| `apps/api` | adapters: Canvas Durable Object, SQLite event store, `/live`, `/admin` |
-| `apps/web` | UI: Next.js with shadcn; the live hex grid on `/`; `worker.ts` sends `/live` and `/admin/*` to the API |
+| `packages/contracts` | shared by api and web: live messages, the oRPC contract with Zod schemas |
+| `apps/api` | adapters: Canvas Durable Object, SQLite event store; Hono routes `/live`, `/admin`, `/api` |
+| `apps/web` | UI: Next.js with shadcn; paint on the live hex grid on `/`; `worker.ts` sends `/api`, `/live` and `/admin` to the API |
 
 Dependencies point inward: api → application → domain.
 
@@ -41,8 +43,10 @@ One canvas = one Durable Object = one event stream.
 - Commands: read the stream, replay, decide, append at `expectedVersion` in one SQLite transaction
 - No locks or deadlocks: the Durable Object runs one request at a time; `expectedVersion` is the backstop
 - Read model: `CanvasView` in memory, updated right after each append, so never behind the stream
-- `/live`: hibernatable WebSockets, a snapshot on connect, then one message per event; session ids
-  and freeze reasons stay inside
+- `/live`: hibernatable WebSockets; on connect a snapshot and a welcome with the viewer's painter
+  name, then one message per event; session ids and freeze reasons stay inside
+- Presence: the online list goes to everyone when someone joins or leaves; it comes from the open
+  WebSockets, not from events, so it is never stored
 
 ## Testing
 

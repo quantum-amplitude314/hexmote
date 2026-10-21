@@ -17,9 +17,11 @@ const adminPage = "/admin";
 const isAdminPath = (pathname: string) =>
   pathname === adminPage || pathname.startsWith(`${adminPage}/`);
 
+const isApiPath = (pathname: string) => pathname === "/live" || pathname.startsWith("/api/");
+
 export const handleRequest: HandleRequest = async ({ request, env, accessKeys, next }) => {
   const { pathname } = new URL(request.url);
-  if (pathname === "/live") return env.API.fetch(request);
+  if (isApiPath(pathname)) return env.API.fetch(request);
   if (!isAdminPath(pathname)) return next(request);
   if (!(await hasAdminAccess({ request, env, accessKeys }))) {
     return new Response("Forbidden", { status: 403 });

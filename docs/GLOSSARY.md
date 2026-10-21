@@ -10,6 +10,8 @@
 | Palette | The colours a visitor can choose from | `HexCodeColor[]` |
 | Session | An anonymous visitor, issued by the server after Turnstile | `sessionId` |
 | Cooldown | Wait time between two paints of one session | `cooldownMs`, `COOLDOWN_MS` |
+| Painter | A session's public name, a colour and an animal, like Blue Fox | `Painter`, `painterOf` |
+| Presence | Who is online now, from the open WebSockets; not an event | `presence` message |
 | Freeze | A hold that stops painting; holds can overlap, each lifted on its own | `FreezeReason`, `freezes` |
 | Completion | Share of template cells painted in their target colour | `completionPercent` |
 

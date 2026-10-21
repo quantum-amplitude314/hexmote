@@ -9,15 +9,17 @@ import {
   cellC,
   cellD,
   cellPainted,
+  palette,
   red,
 } from "../../testing/fixtures.ts";
 import { given } from "../../testing/given.ts";
 
 describe("Slice 5: Canvas view", () => {
-  test("starts with blank cells, 0 % completion and an open canvas", () => {
+  test("starts with blank cells, the palette, 0 % completion and an open canvas", () => {
     const view = given([canvasCreated]).view();
 
     expect(view).toEqual({
+      palette,
       cells: [
         { cell: cellA, targetColor: red, color: null },
         { cell: cellB, targetColor: red, color: null },

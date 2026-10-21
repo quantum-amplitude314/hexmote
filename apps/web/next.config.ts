@@ -11,9 +11,14 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
 ];
 
+// Only `next dev` sets API_URL; the web Worker forwards `/api` in preview and production.
+const { API_URL: devApiUrl } = process.env;
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   headers: async () => [{ source: "/(.*)", headers: securityHeaders }],
+  rewrites: async () =>
+    devApiUrl ? [{ source: "/api/:path*", destination: `${devApiUrl}/api/:path*` }] : [],
 };
 
 export default nextConfig;

@@ -9,9 +9,15 @@ import {
   replayCanvasView,
 } from "@hexmote/domain";
 import { liveMessageFor, snapshotOf } from "./live.ts";
+import { painterOf } from "./painter.ts";
 import { createSqliteEventStore } from "./sqlite-event-store.ts";
 
 export type DeleteResult = { status: "deleted" } | { status: "refused"; reason: "budgetFreeze" };
+
+/** Set by the API Worker from the session cookie, never taken from the browser. */
+export const sessionHeader = "X-Hexmote-Session";
+
+type ViewerAttachment = { sessionId: string };
 
 /** RPC reaches public prototype methods only; `#` members stay out of it. */
 export class Canvas extends DurableObject<Env> {
@@ -27,7 +33,9 @@ export class Canvas extends DurableObject<Env> {
     });
     if (decision.status === "accepted" && decision.events.length > 0) {
       const view = await this.#viewAfter(decision.events);
-      for (const event of decision.events) this.#broadcast(liveMessageFor({ event, view }));
+      for (const event of decision.events) {
+        this.#broadcast({ message: liveMessageFor({ event, view }) });
+      }
     }
 
     return decision;
@@ -62,12 +70,24 @@ export class Canvas extends DurableObject<Env> {
     if (request.headers.get("Upgrade") !== "websocket") {
       return new Response("Expected a WebSocket upgrade", { status: 426 });
     }
+    const sessionId = request.headers.get(sessionHeader) ?? crypto.randomUUID();
     const { 0: client, 1: server } = new WebSocketPair();
     this.ctx.acceptWebSocket(server);
+    server.serializeAttachment({ sessionId } satisfies ViewerAttachment);
     server.send(JSON.stringify(snapshotOf(await this.getView())));
+    this.#send({ socket: server, message: { type: "welcome", you: painterOf(sessionId) } });
+    this.#broadcastPresence();
     const upgraded = new Response(null, { status: 101, webSocket: client });
 
     return upgraded;
+  }
+
+  override webSocketClose(socket: WebSocket) {
+    this.#broadcastPresence(socket);
+  }
+
+  override webSocketError(socket: WebSocket) {
+    this.#broadcastPresence(socket);
   }
 
   async #viewAfter(events: CanvasEvent[]) {
@@ -80,10 +100,32 @@ export class Canvas extends DurableObject<Env> {
     return view;
   }
 
-  #broadcast(message: LiveMessage) {
-    const data = JSON.stringify(message);
-    for (const socket of this.ctx.getWebSockets()) {
-      if (socket.readyState === WebSocket.OPEN) socket.send(data);
-    }
+  #openSockets(leaving?: WebSocket) {
+    const open = this.ctx
+      .getWebSockets()
+      .filter((socket) => socket !== leaving && socket.readyState === WebSocket.OPEN);
+
+    return open;
+  }
+
+  #send({ socket, message }: { socket: WebSocket; message: LiveMessage }) {
+    socket.send(JSON.stringify(message));
+  }
+
+  #broadcast({ message, leaving }: { message: LiveMessage; leaving?: WebSocket | undefined }) {
+    for (const socket of this.#openSockets(leaving)) this.#send({ socket, message });
+  }
+
+  /** By name; a session with several tabs is listed once. */
+  #broadcastPresence(leaving?: WebSocket) {
+    const sessionIds = new Set(
+      this.#openSockets(leaving).map(
+        (socket) => (socket.deserializeAttachment() as ViewerAttachment).sessionId,
+      ),
+    );
+    const online = [...sessionIds]
+      .map(painterOf)
+      .sort((first, second) => first.name.localeCompare(second.name));
+    this.#broadcast({ message: { type: "presence", online }, leaving });
   }
 }

@@ -11,6 +11,7 @@ import type {
 export type CanvasViewCell = { cell: Cell; targetColor: HexCodeColor; color: HexCodeColor | null };
 
 export type CanvasView = {
+  palette: HexCodeColor[];
   cells: CanvasViewCell[];
   completionPercent: number;
   status: "open" | "frozen";
@@ -18,6 +19,7 @@ export type CanvasView = {
 };
 
 export const emptyCanvasView: CanvasView = {
+  palette: [],
   cells: [],
   completionPercent: 0,
   status: "open",
@@ -31,9 +33,10 @@ const completionPercentOf = (cells: CanvasViewCell[]) => {
   return completionPercent;
 };
 
-const createdView = ({ template }: CanvasCreated) => {
+const createdView = ({ palette, template }: CanvasCreated) => {
   const view: CanvasView = {
     ...emptyCanvasView,
+    palette,
     cells: template.map(({ cell, color }) => ({ cell, targetColor: color, color: null })),
   };
 

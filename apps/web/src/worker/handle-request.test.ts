@@ -55,6 +55,10 @@ describe("handleRequest", () => {
     expect(await route({ path: "/live" })).toEqual({ status: 200, body: "api" });
   });
 
+  test("forwards /api to the API", async () => {
+    expect(await route({ path: "/api/paint" })).toEqual({ status: 200, body: "api" });
+  });
+
   test("sends other paths to Next", async () => {
     expect(await route({ path: "/" })).toEqual({ status: 200, body: "next" });
   });

@@ -13,8 +13,12 @@
     "test": "bun test src"
   },
   "dependencies": {
+    "@base-ui/react": "^1.9.0",
     "@hexmote/contracts": "workspace:*",
     "@hexmote/domain": "workspace:*",
+    "@orpc/client": "catalog:",
+    "@orpc/contract": "catalog:",
+    "@orpc/openapi-client": "catalog:",
     "cn": "^0.4.0",
     "jose": "^6.2.13",
     "next": "16.4.1",
