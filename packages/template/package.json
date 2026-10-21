@@ -9,13 +9,15 @@
   },
   "scripts": {
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate": "bun scripts/generate.ts && biome format --write generated"
   },
   "dependencies": {
     "@hexmote/domain": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
+    "fast-png": "^8.0.0",
     "typescript": "catalog:"
   },
   "trustedDependencies": []

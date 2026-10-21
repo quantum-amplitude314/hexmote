@@ -51,4 +51,5 @@ api, against the real Durable Object.
 
 OpenMoji emoji (CC BY-SA 4.0, attribution required). `packages/template` samples the PNG at each
 hex centre: transparent centres are left out, the rest take the nearest palette colour (the 16
-colours of r/place 2017). The generated JSON is committed.
+colours of r/place 2017). `bun run generate` in `packages/template` writes the JSON, which is
+committed.
