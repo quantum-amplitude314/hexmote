@@ -1,6 +1,7 @@
 import type { CanvasState } from "./canvas-state.ts";
-import type { CanvasCommand, CreateCanvas } from "./commands.ts";
-import type { CanvasCreated, CanvasEvent } from "./events.ts";
+import { cellKey } from "./cell.ts";
+import type { CanvasCommand, CreateCanvas, PaintCell } from "./commands.ts";
+import type { CanvasCreated, CanvasEvent, CellPainted } from "./events.ts";
 import { notImplemented } from "./not-implemented.ts";
 
 export type Rejection =
@@ -41,9 +42,37 @@ const decideCreateCanvas = ({ state, command }: { state: CanvasState; command: C
   return decision;
 };
 
+const decidePaintCell = ({
+  state,
+  command,
+  cooldownMs,
+}: {
+  state: CanvasState;
+  command: PaintCell;
+  cooldownMs: number;
+}) => {
+  if (state.status === "none") return rejected({ reason: "noCanvas" });
+  if (state.status === "frozen") return rejected({ reason: "canvasFrozen" });
+
+  const { templateCells, palette, lastPaintAtBySession } = state;
+  const { sessionId, cell, color, at } = command;
+  if (!templateCells.has(cellKey(cell))) return rejected({ reason: "cellOutsideCanvas" });
+  if (!palette.has(color)) return rejected({ reason: "colorNotInPalette" });
+
+  const lastPaintAt = lastPaintAtBySession.get(sessionId) ?? Number.NEGATIVE_INFINITY;
+  const nextPaintAt = lastPaintAt + cooldownMs;
+  if (at < nextPaintAt) return rejected({ reason: "cooldown", retryAt: nextPaintAt });
+
+  const painted: CellPainted = { type: "CellPainted", sessionId, cell, color, at };
+  const decision = accepted([painted]);
+
+  return decision;
+};
+
 export const decide = ({
   state,
   command,
+  cooldownMs,
 }: {
   state: CanvasState;
   command: CanvasCommand;
@@ -52,6 +81,8 @@ export const decide = ({
   switch (command.type) {
     case "CreateCanvas":
       return decideCreateCanvas({ state, command });
+    case "PaintCell":
+      return decidePaintCell({ state, command, cooldownMs });
     default:
       return notImplemented();
   }
