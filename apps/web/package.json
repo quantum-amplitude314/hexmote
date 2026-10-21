@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "preview": "opennextjs-cloudflare build --env preview && opennextjs-cloudflare preview --env preview --port 3000",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "typecheck": "bun run cf-typegen && next typegen && tsc --noEmit",
     "test": "bun test src"
@@ -16,6 +16,7 @@
     "@hexmote/contracts": "workspace:*",
     "@hexmote/domain": "workspace:*",
     "cn": "^0.4.0",
+    "jose": "^6.2.13",
     "next": "16.4.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",

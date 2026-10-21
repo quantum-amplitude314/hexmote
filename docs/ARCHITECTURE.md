@@ -4,7 +4,7 @@
 
 | Layer | Choice |
 |---|---|
-| Monorepo | Bun workspaces, Biome, tsc |
+| Monorepo | Bun workspaces, Turbo, Biome, tsc |
 | Web | Next.js on Cloudflare Workers through OpenNext |
 | API | Hono + oRPC contract |
 | Canvas | One SQLite-backed Durable Object per canvas |
@@ -30,7 +30,7 @@ host, so the session cookie is first-party and no CORS is needed.
 | `packages/template` | build time: emoji PNG → template cells and palette |
 | `packages/contracts` | types shared by api and web: live messages |
 | `apps/api` | adapters: Canvas Durable Object, SQLite event store, `/live`, `/admin` |
-| `apps/web` | UI: Next.js with shadcn; the live hex grid on `/` |
+| `apps/web` | UI: Next.js with shadcn; the live hex grid on `/`; `worker.ts` sends `/live` and `/admin/*` to the API |
 
 Dependencies point inward: api → application → domain.
 

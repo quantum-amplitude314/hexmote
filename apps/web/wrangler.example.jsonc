@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "hexmote-web",
+  "main": "worker.ts",
+  "compatibility_date": "2026-10-19",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [{ "pattern": "hexmote.example.com", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "services": [
+    { "binding": "API", "service": "hexmote-api" },
+    { "binding": "WORKER_SELF_REFERENCE", "service": "hexmote-web" }
+  ],
+  "secrets": { "required": ["ACCESS_TEAM_DOMAIN", "ACCESS_AUD"] },
+  "env": {
+    // Local only: `bun run preview`, without Cloudflare Access in front.
+    "preview": {
+      "routes": [],
+      "vars": { "SKIP_ACCESS_CHECK": "true" },
+      "secrets": { "required": [] },
+      "services": [
+        { "binding": "API", "service": "hexmote-api" },
+        { "binding": "WORKER_SELF_REFERENCE", "service": "hexmote-web-preview" }
+      ]
+    }
+  },
+  "observability": { "enabled": true }
+}

@@ -1,5 +1,6 @@
 node_modules/
 coverage/
+.turbo/
 *.tsbuildinfo
 .env
 .env.*
@@ -17,6 +18,7 @@ CLAUDE.md
 
 # cloudflare
 .wrangler/
+apps/web/wrangler.jsonc
 worker-configuration.d.ts
 cloudflare-env.d.ts
 
