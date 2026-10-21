@@ -1,8 +1,8 @@
-import type { Cell, Color, TemplateCell } from "./cell.ts";
+import type { Cell, HexCodeColor, TemplateCell } from "./cell.ts";
 
 export type CanvasCreated = {
   type: "CanvasCreated";
-  palette: Color[];
+  palette: HexCodeColor[];
   template: TemplateCell[];
   at: number;
 };
@@ -11,7 +11,7 @@ export type CellPainted = {
   type: "CellPainted";
   sessionId: string;
   cell: Cell;
-  color: Color;
+  color: HexCodeColor;
   at: number;
 };
 

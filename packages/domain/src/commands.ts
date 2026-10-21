@@ -1,9 +1,9 @@
-import type { Cell, Color, TemplateCell } from "./cell.ts";
+import type { Cell, HexCodeColor, TemplateCell } from "./cell.ts";
 import type { FreezeReason } from "./events.ts";
 
 export type CreateCanvas = {
   type: "CreateCanvas";
-  palette: Color[];
+  palette: HexCodeColor[];
   template: TemplateCell[];
   at: number;
 };
@@ -13,7 +13,7 @@ export type PaintCell = {
   type: "PaintCell";
   sessionId: string;
   cell: Cell;
-  color: Color;
+  color: HexCodeColor;
   at: number;
 };
 

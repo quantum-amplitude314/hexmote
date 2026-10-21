@@ -5,7 +5,7 @@ export {
   evolveCanvasView,
   replayCanvasView,
 } from "./canvas-view.ts";
-export type { Cell, Color, TemplateCell } from "./cell.ts";
+export type { Cell, HexCodeColor, TemplateCell } from "./cell.ts";
 export type {
   CanvasCommand,
   CreateCanvas,

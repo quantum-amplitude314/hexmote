@@ -4,9 +4,9 @@ import type {
   CanvasUnfrozen,
   Cell,
   CellPainted,
-  Color,
   CreateCanvas,
   FreezeCanvas,
+  HexCodeColor,
   PaintCell,
   UnfreezeCanvas,
 } from "../src/index.ts";
@@ -16,11 +16,11 @@ export const blue = "#1e88e5";
 export const notInPalette = "#00ff00";
 export const palette = [red, blue];
 
-export const cellA = { q: 0, r: 0 };
-export const cellB = { q: 1, r: 0 };
-export const cellC = { q: 0, r: 1 };
-export const cellD = { q: 1, r: 1 };
-export const cellOutside = { q: 9, r: 9 };
+export const cellA = { axialQ: 0, axialR: 0 };
+export const cellB = { axialQ: 1, axialR: 0 };
+export const cellC = { axialQ: 0, axialR: 1 };
+export const cellD = { axialQ: 1, axialR: 1 };
+export const cellOutside = { axialQ: 9, axialR: 9 };
 
 export const template = [
   { cell: cellA, color: red },
@@ -47,7 +47,7 @@ export const cellPainted = ({
   at = t,
 }: {
   cell: Cell;
-  color: Color;
+  color: HexCodeColor;
   sessionId?: string;
   at?: number;
 }) => {
@@ -67,7 +67,7 @@ export const paintCell = ({
   at = t,
 }: {
   cell: Cell;
-  color: Color;
+  color: HexCodeColor;
   sessionId?: string;
   at?: number;
 }) => {

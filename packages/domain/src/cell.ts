@@ -1,7 +1,7 @@
-/** Axial hex coordinates. */
-export type Cell = { q: number; r: number };
+export type Cell = { axialQ: number; axialR: number };
 
-/** Hex colour from the canvas palette, e.g. `#e53935`. */
-export type Color = string;
+export type HexCodeColor = string;
 
-export type TemplateCell = { cell: Cell; color: Color };
+export type TemplateCell = { cell: Cell; color: HexCodeColor };
+
+export const cellKey = ({ axialQ, axialR }: Cell) => `${axialQ},${axialR}`;

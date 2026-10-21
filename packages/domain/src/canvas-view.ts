@@ -1,10 +1,10 @@
-import type { Cell, Color } from "./cell.ts";
+import type { Cell, HexCodeColor } from "./cell.ts";
 import type { CanvasEvent } from "./events.ts";
 import { notImplemented } from "./not-implemented.ts";
 
 /** Read model for the canvas page. */
 export type CanvasView = {
-  cells: { cell: Cell; color: Color | null }[];
+  cells: { cell: Cell; color: HexCodeColor | null }[];
   completionPercent: number;
   status: "open" | "frozen";
 };

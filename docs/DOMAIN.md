@@ -4,7 +4,7 @@ Slices and their specs: [EVENT-MODEL.md](EVENT-MODEL.md).
 
 ## Canvas
 
-- Hex cells in axial coordinates `(q, r)`
+- Hex cells in axial coordinates `(axialQ, axialR)`
 - The emote template decides which cells exist (the emote's silhouette, about 40 cells across)
   and the target colour of each
 - A fixed palette of 16 colours
