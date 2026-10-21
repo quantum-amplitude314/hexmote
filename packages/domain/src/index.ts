@@ -1,6 +1,7 @@
 export { type CanvasState, evolve, initialState, replay } from "./canvas-state.ts";
 export {
   type CanvasView,
+  type CanvasViewCell,
   emptyCanvasView,
   evolveCanvasView,
   replayCanvasView,

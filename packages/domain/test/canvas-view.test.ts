@@ -19,10 +19,10 @@ describe("Slice 5: Canvas view", () => {
 
     expect(view).toEqual({
       cells: [
-        { cell: cellA, color: null },
-        { cell: cellB, color: null },
-        { cell: cellC, color: null },
-        { cell: cellD, color: null },
+        { cell: cellA, targetColor: red, color: null },
+        { cell: cellB, targetColor: red, color: null },
+        { cell: cellC, targetColor: blue, color: null },
+        { cell: cellD, targetColor: blue, color: null },
       ],
       completionPercent: 0,
       status: "open",
@@ -40,10 +40,10 @@ describe("Slice 5: Canvas view", () => {
     const view = given(history).view();
 
     expect(view.cells).toEqual([
-      { cell: cellA, color: red },
-      { cell: cellB, color: null },
-      { cell: cellC, color: red },
-      { cell: cellD, color: null },
+      { cell: cellA, targetColor: red, color: red },
+      { cell: cellB, targetColor: red, color: null },
+      { cell: cellC, targetColor: blue, color: red },
+      { cell: cellD, targetColor: blue, color: null },
     ]);
     expect(view.completionPercent).toBe(25);
   });
@@ -57,7 +57,7 @@ describe("Slice 5: Canvas view", () => {
 
     const view = given(history).view();
 
-    expect(view.cells[0]).toEqual({ cell: cellA, color: blue });
+    expect(view.cells[0]).toEqual({ cell: cellA, targetColor: red, color: blue });
     expect(view.completionPercent).toBe(0);
   });
 

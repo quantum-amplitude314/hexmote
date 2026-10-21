@@ -126,7 +126,8 @@ Then   rejected: no canvas
 
 ## Slice 5: Canvas view
 
-Every cell's current colour, completion, whether the canvas is open, and the active freeze reasons.
+Every cell's target and current colour, completion, whether the canvas is open, and the active
+freeze reasons.
 
 ```
 Given  CanvasCreated

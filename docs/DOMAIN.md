@@ -36,6 +36,6 @@ Slices and their specs: [EVENT-MODEL.md](EVENT-MODEL.md).
 
 ## Read model
 
-- Current colour of every cell; the last paint wins
-- Completion: share of template cells painted in their target colour
+- Target and current colour of every cell; the last paint wins
+- Completion: share of template cells painted in their target colour, rounded down
 - Open or frozen, plus the active freeze reasons; the public API shows only open or frozen
