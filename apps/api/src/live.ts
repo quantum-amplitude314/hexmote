@@ -5,8 +5,8 @@ import { painterOf } from "./painter.ts";
 type LiveMessageFor = (input: { event: CanvasEvent; view: CanvasView }) => LiveMessage;
 
 // An allowlist: a new `CanvasView` field stays private until it is added here.
-export const toPublicView = ({ palette, cells, completionPercent, status }: CanvasView) => {
-  const publicView: PublicCanvasView = { palette, cells, completionPercent, status };
+export const toPublicView = ({ palette, cells, paintedPercent, status, resetAt }: CanvasView) => {
+  const publicView: PublicCanvasView = { palette, cells, paintedPercent, status, resetAt };
 
   return publicView;
 };
@@ -26,12 +26,13 @@ export const liveMessageFor: LiveMessageFor = ({ event, view }) => {
         type: "cellPainted",
         cell: event.cell,
         color: event.color,
-        completionPercent: view.completionPercent,
+        paintedPercent: view.paintedPercent,
         painter: painterOf(event.sessionId),
       };
     case "CanvasFrozen":
     case "CanvasUnfrozen":
-      return { type: "status", status: view.status };
+    case "CanvasCompleted":
+      return { type: "status", status: view.status, resetAt: view.resetAt };
     default:
       return event satisfies never;
   }

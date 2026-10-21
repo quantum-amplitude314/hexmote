@@ -7,11 +7,11 @@ import {
   replay,
   replayCanvasView,
 } from "../index.ts";
-import { cooldownMs } from "./fixtures.ts";
+import { config } from "./fixtures.ts";
 
 export const given = (events: CanvasEvent[]) => {
   const scenario = {
-    when: (command: CanvasCommand) => decide({ state: replay(events), command, cooldownMs }),
+    when: (command: CanvasCommand) => decide({ state: replay(events), command, config }),
     view: () => replayCanvasView(events),
   };
 

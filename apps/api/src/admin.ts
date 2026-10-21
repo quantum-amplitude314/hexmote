@@ -1,5 +1,5 @@
 import type { CreateCanvas, Decision } from "@hexmote/domain";
-import type { Canvas, DeleteResult } from "./canvas.ts";
+import type { Canvas, DeleteResult, ResetResult } from "./canvas.ts";
 
 type HandleAdminRequest = (input: {
   request: Request;
@@ -10,10 +10,10 @@ type HandleAdminRequest = (input: {
 const decisionResponse = (decision: Decision) =>
   Response.json(decision, { status: decision.status === "accepted" ? 200 : 409 });
 
-const deleteResponse = (result: DeleteResult) =>
-  result.status === "deleted"
-    ? new Response(null, { status: 204 })
-    : Response.json(result, { status: 409 });
+const refusableResponse = (result: DeleteResult | ResetResult) =>
+  result.status === "refused"
+    ? Response.json(result, { status: 409 })
+    : new Response(null, { status: 204 });
 
 export const handleAdminRequest: HandleAdminRequest = async ({ request, canvas, emote }) => {
   const { pathname } = new URL(request.url);
@@ -29,8 +29,10 @@ export const handleAdminRequest: HandleAdminRequest = async ({ request, canvas, 
       return decisionResponse(
         await canvas.handleCommand({ type: "UnfreezeCanvas", reason: "manual", at }),
       );
+    case "POST /admin/reset":
+      return refusableResponse(await canvas.resetCanvas());
     case "DELETE /admin/canvas":
-      return deleteResponse(await canvas.deleteCanvas());
+      return refusableResponse(await canvas.deleteCanvas());
     default:
       return new Response("Not found", { status: 404 });
   }

@@ -7,8 +7,10 @@ export type {
   PaintCell,
   UnfreezeCanvas,
 } from "./canvas/commands.ts";
+export type { CanvasConfig } from "./canvas/config.ts";
 export type { Decision, Rejection } from "./canvas/decision.ts";
 export type {
+  CanvasCompleted,
   CanvasCreated,
   CanvasEvent,
   CanvasFrozen,

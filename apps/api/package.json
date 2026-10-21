@@ -5,8 +5,8 @@
   "type": "module",
   "packageManager": "bun@1.4.2",
   "scripts": {
-    "dev": "wrangler dev --var COOLDOWN_MS:1000",
-    "preview": "wrangler dev --var COOLDOWN_MS:1000",
+    "dev": "wrangler dev",
+    "preview": "wrangler dev",
     "types": "wrangler types",
     "test": "vitest run",
     "typecheck": "wrangler types && tsc --noEmit"

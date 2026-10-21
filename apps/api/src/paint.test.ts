@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { cellA, cellOutside, cooldownMs, createCanvas, red } from "@hexmote/domain/testing";
 import { describe, expect, test } from "vitest";
 import { createApp } from "./app.ts";
+import { completeCanvas } from "./testing/complete-canvas.ts";
 import { connectLive } from "./testing/live-client.ts";
 
 const sessionCookieName = "__Host-hexmote-session";
@@ -23,7 +24,7 @@ const appOfNewCanvas = async () => {
 
     return response;
   };
-  const painting = { fetchApp, paint };
+  const painting = { canvas, fetchApp, paint };
 
   return painting;
 };
@@ -48,7 +49,7 @@ describe("Paint route", () => {
       type: "cellPainted",
       cell: cellA,
       color: red,
-      completionPercent: 25,
+      paintedPercent: 25,
     });
     client.close();
   });
@@ -106,6 +107,18 @@ describe("Paint route", () => {
     const response = await paint({ body: { cell: "a1", color: 12 } });
 
     expect(response.status).toBe(400);
+  });
+
+  test("reports a completed canvas", async () => {
+    const { canvas, paint } = await appOfNewCanvas();
+    await completeCanvas({ canvas });
+
+    const response = await paint({ body: paintRed });
+
+    expect(await response.json()).toEqual({
+      status: "rejected",
+      rejection: { reason: "canvasCompleted" },
+    });
   });
 
   test("reports a rejection from the canvas", async () => {

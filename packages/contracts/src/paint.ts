@@ -15,6 +15,7 @@ const rejectionSchema = z.discriminatedUnion("reason", [
   z.object({ reason: z.literal("colorNotInPalette") }),
   z.object({ reason: z.literal("cooldown"), retryAt: z.number() }),
   z.object({ reason: z.literal("canvasFrozen") }),
+  z.object({ reason: z.literal("canvasCompleted") }),
 ]) satisfies z.ZodType<Rejection>;
 
 export const paintResultSchema = z.discriminatedUnion("status", [

@@ -13,6 +13,7 @@ https://hexmote.quantum-amplitude.tech
 
 ```sh
 bun install
+cp apps/api/.dev.vars.example apps/api/.dev.vars     # once
 cp apps/web/.env.example apps/web/.env.development   # once
 cp apps/web/wrangler.example.jsonc apps/web/wrangler.jsonc   # once, set your domain
 bun run dev                                          # API on :8787, web on :3000
@@ -21,6 +22,9 @@ curl -X POST localhost:8787/admin/canvas             # create the 😀 canvas, o
 
 Open http://localhost:3000, pick a colour and click a cell; the cooldown is 1 s locally. A private
 window is a second painter: both appear online, and each sees the other's paints pulse with a name.
+
+`bun run fill` paints all but 3 cells. Paint those to complete the canvas: a countdown starts, and
+1 min later (6 h in prod) a new round begins.
 
 `bun run preview` runs the web Worker itself on :3000, so `/api`, `/live` and `/admin/*` go through
 it to the API.

@@ -18,6 +18,8 @@ CLAUDE.md
 
 # cloudflare
 .wrangler/
+.dev.vars
+!.dev.vars.example
 apps/web/wrangler.jsonc
 worker-configuration.d.ts
 cloudflare-env.d.ts

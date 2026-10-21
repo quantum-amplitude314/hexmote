@@ -13,7 +13,7 @@ export type LiveMessage =
       type: "cellPainted";
       cell: Cell;
       color: HexCodeColor;
-      completionPercent: number;
+      paintedPercent: number;
       painter: Painter;
     }
-  | { type: "status"; status: CanvasView["status"] };
+  | { type: "status"; status: CanvasView["status"]; resetAt: CanvasView["resetAt"] };

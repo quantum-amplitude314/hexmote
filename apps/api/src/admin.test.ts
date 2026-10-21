@@ -4,12 +4,16 @@ import { emptyCanvasView, replayCanvasView } from "@hexmote/domain";
 import {
   canvasCreated,
   canvasFrozen,
+  cellA,
   freezeCanvas,
+  paintCell,
   palette,
+  red,
   template,
 } from "@hexmote/domain/testing";
 import { describe, expect, test } from "vitest";
 import { handleAdminRequest } from "./admin.ts";
+import { completeCanvas } from "./testing/complete-canvas.ts";
 
 const emote = { palette, template };
 
@@ -30,6 +34,7 @@ const createCanvasRequest = { method: "POST", path: "/admin/canvas" };
 const deleteCanvasRequest = { method: "DELETE", path: "/admin/canvas" };
 const freezeRequest = { method: "POST", path: "/admin/freeze" };
 const unfreezeRequest = { method: "POST", path: "/admin/unfreeze" };
+const resetRequest = { method: "POST", path: "/admin/reset" };
 
 describe("Admin routes", () => {
   test("creates the canvas with the emote", async () => {
@@ -118,6 +123,37 @@ describe("Admin routes", () => {
     expect(await canvas.getView()).toEqual(
       replayCanvasView([canvasCreated, canvasFrozen({ reason: "budget" })]),
     );
+  });
+
+  test("starts a new round with the same emote on demand", async () => {
+    const { canvas, send } = adminOfNewCanvas();
+    await send(createCanvasRequest);
+    await canvas.handleCommand(paintCell({ cell: cellA, color: red }));
+
+    const response = await send(resetRequest);
+
+    expect(response.status).toBe(204);
+    expect(await canvas.getView()).toEqual(replayCanvasView([canvasCreated]));
+  });
+
+  test("refuses to reset while the budget freeze is active", async () => {
+    const { canvas, send } = adminOfNewCanvas();
+    await send(createCanvasRequest);
+    await completeCanvas({ canvas });
+    await canvas.handleCommand(freezeCanvas({ reason: "budget" }));
+
+    const response = await send(resetRequest);
+
+    expect(response.status).toBe(409);
+    expect((await canvas.getView()).freezes).toEqual(["budget"]);
+  });
+
+  test("refuses to reset before the canvas exists", async () => {
+    const { send } = adminOfNewCanvas();
+
+    const response = await send(resetRequest);
+
+    expect(response.status).toBe(409);
   });
 
   test("answers 404 for an unknown admin route", async () => {

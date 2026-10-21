@@ -14,14 +14,15 @@ const view: PublicCanvasView = {
     { cell: cellA, targetColor: red, color: null },
     { cell: cellB, targetColor: red, color: null },
   ],
-  completionPercent: 0,
+  paintedPercent: 0,
   status: "open",
+  resetAt: null,
 };
 
 const watching: LiveState = { ...emptyLiveState, view, you: blueFox };
 
 const paintedBy = (painter: Painter) =>
-  ({ type: "cellPainted", cell: cellA, color: red, completionPercent: 50, painter }) as const;
+  ({ type: "cellPainted", cell: cellA, color: red, paintedPercent: 50, painter }) as const;
 
 describe("applyLiveMessage", () => {
   test("replaces the view with a snapshot", () => {
@@ -33,7 +34,7 @@ describe("applyLiveMessage", () => {
     expect(state.view).toEqual(view);
   });
 
-  test("paints the cell and takes the new completion", () => {
+  test("paints the cell and takes the new painted share", () => {
     const state = applyLiveMessage({ state: watching, message: paintedBy(redOwl) });
 
     expect(state.view).toEqual({
@@ -42,23 +43,34 @@ describe("applyLiveMessage", () => {
         { cell: cellA, targetColor: red, color: red },
         { cell: cellB, targetColor: red, color: null },
       ],
-      completionPercent: 50,
+      paintedPercent: 50,
     });
   });
 
   test("changes only the status on a status message", () => {
     const state = applyLiveMessage({
       state: watching,
-      message: { type: "status", status: "frozen" },
+      message: { type: "status", status: "frozen", resetAt: null },
     });
 
     expect(state.view).toEqual({ ...view, status: "frozen" });
   });
 
+  test("takes the time of the new round from a completed status", () => {
+    const resetAt = Date.UTC(2026, 9, 22, 18);
+
+    const state = applyLiveMessage({
+      state: watching,
+      message: { type: "status", status: "completed", resetAt },
+    });
+
+    expect(state.view).toEqual({ ...view, status: "completed", resetAt });
+  });
+
   test("ignores updates before the first snapshot", () => {
     const state = applyLiveMessage({
       state: emptyLiveState,
-      message: { type: "status", status: "frozen" },
+      message: { type: "status", status: "frozen", resetAt: null },
     });
 
     expect(state.view).toBeNull();

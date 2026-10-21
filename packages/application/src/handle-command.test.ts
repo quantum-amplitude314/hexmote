@@ -4,7 +4,7 @@ import {
   canvasFrozen,
   cellA,
   cellPainted,
-  cooldownMs,
+  config,
   createCanvas,
   freezeCanvas,
   paintCell,
@@ -18,7 +18,7 @@ describe("handleCommand", () => {
   test("creates the stream with the first command", async () => {
     const store = createInMemoryEventStore();
 
-    const decision = await handleCommand({ store, command: createCanvas, cooldownMs });
+    const decision = await handleCommand({ store, command: createCanvas, config });
 
     expect(decision).toEqual({ status: "accepted", events: [canvasCreated] });
     expect(await store.read()).toEqual({ events: [canvasCreated], version: 1 });
@@ -31,7 +31,7 @@ describe("handleCommand", () => {
     const decision = await handleCommand({
       store,
       command: paintCell({ cell: cellA, color: red }),
-      cooldownMs,
+      config,
     });
 
     expect(decision).toEqual({ status: "accepted", events: [painted] });
@@ -42,7 +42,7 @@ describe("handleCommand", () => {
     const store = createInMemoryEventStore([canvasCreated]);
     const append = spyOn(store, "append");
 
-    const decision = await handleCommand({ store, command: createCanvas, cooldownMs });
+    const decision = await handleCommand({ store, command: createCanvas, config });
 
     expect(decision).toEqual({ status: "rejected", rejection: { reason: "canvasExists" } });
     expect(append).not.toHaveBeenCalled();
@@ -52,7 +52,7 @@ describe("handleCommand", () => {
     const store = createInMemoryEventStore([canvasCreated, canvasFrozen()]);
     const append = spyOn(store, "append");
 
-    const decision = await handleCommand({ store, command: freezeCanvas(), cooldownMs });
+    const decision = await handleCommand({ store, command: freezeCanvas(), config });
 
     expect(decision).toEqual({ status: "accepted", events: [] });
     expect(append).not.toHaveBeenCalled();
@@ -64,7 +64,7 @@ describe("handleCommand", () => {
       new VersionConflictError({ expectedVersion: 1, actualVersion: 2 }),
     );
 
-    const handling = handleCommand({ store, command: freezeCanvas(), cooldownMs });
+    const handling = handleCommand({ store, command: freezeCanvas(), config });
 
     await expect(handling).rejects.toBeInstanceOf(VersionConflictError);
   });

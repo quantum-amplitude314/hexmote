@@ -47,6 +47,8 @@ One canvas = one Durable Object = one event stream.
   name, then one message per event; session ids and freeze reasons stay inside
 - Presence: the online list goes to everyone when someone joins or leaves; it comes from the open
   WebSockets, not from events, so it is never stored
+- Rounds: `CanvasCompleted` sets an alarm at `resetAt`; the alarm wipes the stream and records the
+  old `CanvasCreated` again, so viewers get a blank snapshot; during a budget freeze it retries hourly
 
 ## Testing
 

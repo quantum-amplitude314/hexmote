@@ -23,6 +23,8 @@ export const rejectionText = (rejection: Rejection) => {
       return "Too soon, wait for the cooldown";
     case "canvasFrozen":
       return "The canvas is frozen";
+    case "canvasCompleted":
+      return "The picture is complete";
     default:
       return rejection satisfies never;
   }

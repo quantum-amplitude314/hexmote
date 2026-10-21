@@ -1,4 +1,4 @@
-import { evictDurableObject } from "cloudflare:test";
+import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { emptyCanvasView, replayCanvasView } from "@hexmote/domain";
 import {
@@ -8,12 +8,16 @@ import {
   cellPainted,
   cooldownMs,
   createCanvas,
+  freezeCanvas,
+  minutes,
   paintCell,
   red,
+  resetAfterMs,
   seconds,
   t,
 } from "@hexmote/domain/testing";
 import { describe, expect, test } from "vitest";
+import { completeCanvas } from "./testing/complete-canvas.ts";
 
 const newCanvasId = () => env.CANVAS.newUniqueId();
 
@@ -107,5 +111,55 @@ describe("Canvas read model", () => {
     const view = await env.CANVAS.get(id).getView();
 
     expect(view).toEqual(replayCanvasView([canvasCreated, paintedA]));
+  });
+});
+
+describe("Canvas rounds", () => {
+  const completedCanvas = async (at = Date.now()) => {
+    const canvas = env.CANVAS.get(newCanvasId());
+    await canvas.handleCommand(createCanvas);
+    await completeCanvas({ canvas, at });
+
+    return canvas;
+  };
+  const alarmOf = (canvas: DurableObjectStub) =>
+    runInDurableObject(canvas, (_canvas, { storage }) => storage.getAlarm());
+
+  test("schedules the new round for the reset time of the completed canvas", async () => {
+    const at = Date.now();
+
+    const canvas = await completedCanvas(at);
+
+    expect(await alarmOf(canvas)).toBe(at + resetAfterMs);
+  });
+
+  test("starts a new round with the same emote when the alarm runs", async () => {
+    const canvas = await completedCanvas();
+
+    expect(await runDurableObjectAlarm(canvas)).toBe(true);
+
+    expect(await canvas.getView()).toEqual(replayCanvasView([canvasCreated]));
+  });
+
+  test("keeps the new round after eviction", async () => {
+    const canvas = await completedCanvas();
+    await runDurableObjectAlarm(canvas);
+
+    await evictDurableObject(canvas);
+
+    expect(await canvas.getView()).toEqual(replayCanvasView([canvasCreated]));
+  });
+
+  test("waits during a budget freeze and tries again in an hour", async () => {
+    const canvas = await completedCanvas();
+    await canvas.handleCommand(freezeCanvas({ reason: "budget" }));
+    const before = Date.now();
+
+    await runDurableObjectAlarm(canvas);
+
+    const { status, freezes, resetAt } = await canvas.getView();
+    expect({ status, freezes }).toEqual({ status: "frozen", freezes: ["budget"] });
+    expect(resetAt).not.toBeNull();
+    expect(await alarmOf(canvas)).toBeGreaterThanOrEqual(before + minutes(60));
   });
 });

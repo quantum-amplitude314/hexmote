@@ -7,7 +7,8 @@ export type Rejection =
   | { reason: "cellOutsideCanvas" }
   | { reason: "colorNotInPalette" }
   | { reason: "cooldown"; retryAt: number }
-  | { reason: "canvasFrozen" };
+  | { reason: "canvasFrozen" }
+  | { reason: "canvasCompleted" };
 
 export type Decision =
   | { status: "accepted"; events: CanvasEvent[] }

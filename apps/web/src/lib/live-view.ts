@@ -25,14 +25,14 @@ const paintedView = ({
   view: PublicCanvasView;
   message: CellPaintedMessage;
 }) => {
-  const { cell, color, completionPercent } = message;
+  const { cell, color, paintedPercent } = message;
   const paintedKey = cellKey(cell);
   const painted: PublicCanvasView = {
     ...view,
     cells: view.cells.map((viewCell) =>
       cellKey(viewCell.cell) === paintedKey ? { ...viewCell, color } : viewCell,
     ),
-    completionPercent,
+    paintedPercent,
   };
 
   return painted;
@@ -71,8 +71,11 @@ export const applyLiveMessage: ApplyLiveMessage = ({ state, message }) => {
       return { ...state, online: message.online };
     case "cellPainted":
       return paintedState({ state, message });
-    case "status":
-      return state.view ? { ...state, view: { ...state.view, status: message.status } } : state;
+    case "status": {
+      const { status, resetAt } = message;
+
+      return state.view ? { ...state, view: { ...state.view, status, resetAt } } : state;
+    }
     default:
       return message satisfies never;
   }

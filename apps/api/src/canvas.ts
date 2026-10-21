@@ -3,6 +3,7 @@ import { handleCommand } from "@hexmote/application";
 import type { LiveMessage } from "@hexmote/contracts";
 import {
   type CanvasCommand,
+  type CanvasConfig,
   type CanvasEvent,
   type CanvasView,
   evolveCanvasView,
@@ -12,7 +13,18 @@ import { liveMessageFor, snapshotOf } from "./live.ts";
 import { painterOf } from "./painter.ts";
 import { createSqliteEventStore } from "./sqlite-event-store.ts";
 
-export type DeleteResult = { status: "deleted" } | { status: "refused"; reason: "budgetFreeze" };
+type BudgetFreezeRefusal = { status: "refused"; reason: "budgetFreeze" };
+
+export type DeleteResult = { status: "deleted" } | BudgetFreezeRefusal;
+
+export type ResetResult =
+  | { status: "reset" }
+  | BudgetFreezeRefusal
+  | { status: "refused"; reason: "noCanvas" };
+
+const budgetFreezeRefusal: BudgetFreezeRefusal = { status: "refused", reason: "budgetFreeze" };
+
+const resetRetryMs = 60 * 60 * 1000;
 
 /** Set by the API Worker from the session cookie, never taken from the browser. */
 export const sessionHeader = "X-Hexmote-Session";
@@ -22,19 +34,23 @@ type ViewerAttachment = { sessionId: string };
 /** RPC reaches public prototype methods only; `#` members stay out of it. */
 export class Canvas extends DurableObject<Env> {
   #store = createSqliteEventStore(this.ctx.storage);
-  #cooldownMs = Number(this.env.COOLDOWN_MS);
+  #config: CanvasConfig = {
+    cooldownMs: Number(this.env.COOLDOWN_MS),
+    resetAfterMs: Number(this.env.RESET_AFTER_MS),
+  };
   #view: CanvasView | null = null;
 
   async handleCommand(command: CanvasCommand) {
     const decision = await handleCommand({
       store: this.#store,
       command,
-      cooldownMs: this.#cooldownMs,
+      config: this.#config,
     });
     if (decision.status === "accepted" && decision.events.length > 0) {
       const view = await this.#viewAfter(decision.events);
       for (const event of decision.events) {
         this.#broadcast({ message: liveMessageFor({ event, view }) });
+        if (event.type === "CanvasCompleted") await this.ctx.storage.setAlarm(event.resetAt);
       }
     }
 
@@ -51,19 +67,36 @@ export class Canvas extends DurableObject<Env> {
   }
 
   async deleteCanvas() {
-    const { freezes } = await this.getView();
-    if (freezes.includes("budget")) {
-      const refused: DeleteResult = { status: "refused", reason: "budgetFreeze" };
-
-      return refused;
-    }
-    await this.ctx.storage.deleteAll();
-    // deleteAll drops the events table too; the new store creates it again.
-    this.#store = createSqliteEventStore(this.ctx.storage);
-    this.#view = null;
+    if (await this.#isBudgetFrozen()) return budgetFreezeRefusal;
+    await this.#wipe();
     const deleted: DeleteResult = { status: "deleted" };
 
     return deleted;
+  }
+
+  /** A new round: the same emote on a blank canvas; the old round's events are gone. */
+  async resetCanvas() {
+    const {
+      events: [created],
+    } = await this.#store.read();
+    if (created?.type !== "CanvasCreated") {
+      const refused: ResetResult = { status: "refused", reason: "noCanvas" };
+
+      return refused;
+    }
+    if (await this.#isBudgetFrozen()) return budgetFreezeRefusal;
+    await this.#wipe();
+    const { palette, template } = created;
+    await this.handleCommand({ type: "CreateCanvas", palette, template, at: Date.now() });
+    const reset: ResetResult = { status: "reset" };
+
+    return reset;
+  }
+
+  override async alarm() {
+    const result = await this.resetCanvas();
+    const waitsForBudget = result.status === "refused" && result.reason === "budgetFreeze";
+    if (waitsForBudget) await this.ctx.storage.setAlarm(Date.now() + resetRetryMs);
   }
 
   override async fetch(request: Request) {
@@ -88,6 +121,20 @@ export class Canvas extends DurableObject<Env> {
 
   override webSocketError(socket: WebSocket) {
     this.#broadcastPresence(socket);
+  }
+
+  async #isBudgetFrozen() {
+    const { freezes } = await this.getView();
+
+    return freezes.includes("budget");
+  }
+
+  /** Also clears the alarm. */
+  async #wipe() {
+    await this.ctx.storage.deleteAll();
+    // deleteAll drops the events table too; the new store creates it again.
+    this.#store = createSqliteEventStore(this.ctx.storage);
+    this.#view = null;
   }
 
   async #viewAfter(events: CanvasEvent[]) {

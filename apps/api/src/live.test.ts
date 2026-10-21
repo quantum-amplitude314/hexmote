@@ -1,4 +1,4 @@
-import { evictDurableObject } from "cloudflare:test";
+import { evictDurableObject, runDurableObjectAlarm } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { type CanvasEvent, replayCanvasView } from "@hexmote/domain";
 import {
@@ -9,11 +9,13 @@ import {
   freezeCanvas,
   paintCell,
   red,
+  resetAfterMs,
   s1,
   s2,
 } from "@hexmote/domain/testing";
 import { afterEach, describe, expect, test } from "vitest";
 import { painterOf } from "./painter.ts";
+import { completeCanvas } from "./testing/complete-canvas.ts";
 import { connectLive } from "./testing/live-client.ts";
 
 const publicViewOf = (events: CanvasEvent[]) => {
@@ -121,7 +123,7 @@ describe("Canvas live updates", () => {
     });
   });
 
-  test("broadcasts a painted cell with its painter and the new completion to every client", async () => {
+  test("broadcasts a painted cell with its painter and the painted share to every client", async () => {
     const canvas = await createdCanvas();
     const first = await connectPastGreeting({ canvas, sessionId: s1 });
     const second = await connectPastGreeting({ canvas, sessionId: s2 });
@@ -132,7 +134,7 @@ describe("Canvas live updates", () => {
       type: "cellPainted",
       cell: cellA,
       color: red,
-      completionPercent: 25,
+      paintedPercent: 25,
       painter: painterOf(s2),
     };
     expect(await first.nextMessageOf("cellPainted")).toEqual(painted);
@@ -145,7 +147,35 @@ describe("Canvas live updates", () => {
 
     await canvas.handleCommand(freezeCanvas({ reason: "budget" }));
 
-    expect(await client.nextMessage()).toEqual({ type: "status", status: "frozen" });
+    expect(await client.nextMessage()).toEqual({ type: "status", status: "frozen", resetAt: null });
+  });
+
+  test("broadcasts the completed status with the time of the new round", async () => {
+    const canvas = await createdCanvas();
+    const client = await connectPastGreeting({ canvas });
+    const at = Date.now();
+
+    await completeCanvas({ canvas, at });
+
+    expect(await client.nextMessageOf("status")).toEqual({
+      type: "status",
+      status: "completed",
+      resetAt: at + resetAfterMs,
+    });
+  });
+
+  test("sends viewers the new round when it starts", async () => {
+    const canvas = await createdCanvas();
+    const client = await connectPastGreeting({ canvas });
+    await completeCanvas({ canvas });
+    await client.nextMessageOf("status");
+
+    await runDurableObjectAlarm(canvas);
+
+    expect(await client.nextMessageOf("snapshot")).toEqual({
+      type: "snapshot",
+      view: publicViewOf([canvasCreated]),
+    });
   });
 
   test("sends nothing for a rejected command", async () => {

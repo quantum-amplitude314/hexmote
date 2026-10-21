@@ -16,7 +16,9 @@ export type CanvasState =
       freezes: ReadonlySet<FreezeReason>;
       palette: ReadonlySet<HexCodeColor>;
       templateCells: ReadonlySet<string>;
+      blankCells: ReadonlySet<string>;
       lastPaintAtBySession: ReadonlyMap<string, number>;
+      completed: boolean;
     };
 
 type CreatedCanvasState = Exclude<CanvasState, { status: "none" }>;
@@ -31,21 +33,26 @@ const createdCanvas = ({ state, event }: { state: CanvasState; event: CanvasEven
 };
 
 const createdState = ({ palette, template }: CanvasCreated) => {
+  const templateCells = new Set(template.map(({ cell }) => cellKey(cell)));
   const state: CanvasState = {
     status: "created",
     freezes: new Set(),
     palette: new Set(palette),
-    templateCells: new Set(template.map(({ cell }) => cellKey(cell))),
+    templateCells,
+    blankCells: templateCells,
     lastPaintAtBySession: new Map(),
+    completed: false,
   };
 
   return state;
 };
 
 const paintedState = ({ state, event }: { state: CreatedCanvasState; event: CellPainted }) => {
-  const { sessionId, at } = event;
+  const { sessionId, cell, at } = event;
   const lastPaintAtBySession = new Map(state.lastPaintAtBySession).set(sessionId, at);
-  const painted: CanvasState = { ...state, lastPaintAtBySession };
+  const paintedKey = cellKey(cell);
+  const blankCells = new Set([...state.blankCells].filter((blank) => blank !== paintedKey));
+  const painted: CanvasState = { ...state, blankCells, lastPaintAtBySession };
 
   return painted;
 };
@@ -65,6 +72,12 @@ const unfrozenState = ({ state, event }: { state: CreatedCanvasState; event: Can
   return unfrozen;
 };
 
+const completedState = (state: CreatedCanvasState) => {
+  const completed: CanvasState = { ...state, completed: true };
+
+  return completed;
+};
+
 export const evolve = ({ state, event }: { state: CanvasState; event: CanvasEvent }) => {
   switch (event.type) {
     case "CanvasCreated":
@@ -75,6 +88,8 @@ export const evolve = ({ state, event }: { state: CanvasState; event: CanvasEven
       return frozenState({ state: createdCanvas({ state, event }), event });
     case "CanvasUnfrozen":
       return unfrozenState({ state: createdCanvas({ state, event }), event });
+    case "CanvasCompleted":
+      return completedState(createdCanvas({ state, event }));
     default:
       return event satisfies never;
   }

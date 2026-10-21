@@ -1,9 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import {
+  blue,
+  canvasCompleted,
   canvasCreated,
   canvasFrozen,
   cellA,
   cellB,
+  cellC,
+  cellD,
   cellOutside,
   cellPainted,
   notInPalette,
@@ -81,5 +85,44 @@ describe("Slice 2: Paint a cell", () => {
     );
 
     expect(decision).toEqual(rejected({ reason: "canvasFrozen" }));
+  });
+
+  describe("completing the canvas", () => {
+    const allButD = [
+      canvasCreated,
+      cellPainted({ cell: cellA, color: red }),
+      cellPainted({ cell: cellB, color: blue }),
+      cellPainted({ cell: cellC, color: red }),
+    ];
+
+    test("completes the canvas with the paint that fills the last blank cell", () => {
+      const decision = given(allButD).when(paintCell({ sessionId: s2, cell: cellD, color: red }));
+
+      expect(decision).toEqual(
+        accepted([cellPainted({ sessionId: s2, cell: cellD, color: red }), canvasCompleted()]),
+      );
+    });
+
+    test("keeps painting while a blank cell is left", () => {
+      const decision = given(allButD).when(paintCell({ sessionId: s2, cell: cellA, color: blue }));
+
+      expect(decision).toEqual(
+        accepted([cellPainted({ sessionId: s2, cell: cellA, color: blue })]),
+      );
+    });
+
+    test("rejects painting on a completed canvas", () => {
+      const history = [
+        ...allButD,
+        cellPainted({ sessionId: s2, cell: cellD, color: red }),
+        canvasCompleted(),
+      ];
+
+      const decision = given(history).when(
+        paintCell({ cell: cellA, color: blue, at: t + seconds(10) }),
+      );
+
+      expect(decision).toEqual(rejected({ reason: "canvasCompleted" }));
+    });
   });
 });

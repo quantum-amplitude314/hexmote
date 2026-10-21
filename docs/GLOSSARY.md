@@ -6,14 +6,15 @@
 |---|---|---|
 | Canvas | The shared hex grid visitors paint together | `Canvas` Durable Object |
 | Cell | One hexagon, addressed by axial coordinates | `Cell { axialQ, axialR }` |
-| Template | The emote: which cells exist and the target colour of each | `TemplateCell[]` |
+| Template | The emote: which cells exist and the faded colour each starts with | `TemplateCell[]` |
 | Palette | The colours a visitor can choose from | `HexCodeColor[]` |
 | Session | An anonymous visitor, issued by the server after Turnstile | `sessionId` |
 | Cooldown | Wait time between two paints of one session | `cooldownMs`, `COOLDOWN_MS` |
 | Painter | A session's public name, a colour and an animal, like Blue Fox | `Painter`, `painterOf` |
 | Presence | Who is online now, from the open WebSockets; not an event | `presence` message |
 | Freeze | A hold that stops painting; holds can overlap, each lifted on its own | `FreezeReason`, `freezes` |
-| Completion | Share of template cells painted in their target colour | `completionPercent` |
+| Painted share | Share of cells painted, whatever the colour | `paintedPercent` |
+| Round | One painting of the canvas; once complete, the next round starts after a delay | `CanvasCompleted`, `resetAt`, `RESET_AFTER_MS` |
 
 ## CQRS and Event Sourcing
 

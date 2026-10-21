@@ -27,6 +27,7 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "fill": "bun apps/api/scripts/fill.ts",
     "lint-fix": "biome check --write ."
   },
   "devDependencies": {

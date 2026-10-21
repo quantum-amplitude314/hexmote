@@ -26,6 +26,9 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
   --animate-paint-pulse: paint-pulse 2.5s ease-out forwards;
+  --color-place-blue: #0083c7;
+  --color-place-pink: #ffa7d1;
+  --color-place-green: #02be01;
 
   @keyframes paint-pulse {
     from {

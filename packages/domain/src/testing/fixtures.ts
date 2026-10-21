@@ -1,4 +1,6 @@
 import type {
+  CanvasCompleted,
+  CanvasConfig,
   CanvasCreated,
   CanvasFrozen,
   CanvasUnfrozen,
@@ -34,8 +36,11 @@ export const s1 = "s1";
 export const s2 = "s2";
 
 export const seconds = (count: number) => count * 1000;
+export const minutes = (count: number) => count * seconds(60);
 export const t = Date.UTC(2026, 9, 21, 12);
 export const cooldownMs = seconds(10);
+export const resetAfterMs = minutes(60);
+export const config: CanvasConfig = { cooldownMs, resetAfterMs };
 
 export const canvasCreated: CanvasCreated = { type: "CanvasCreated", palette, template, at: t };
 export const canvasFrozen = ({ reason = "manual" }: { reason?: FreezeReason } = {}) => {
@@ -46,6 +51,12 @@ export const canvasFrozen = ({ reason = "manual" }: { reason?: FreezeReason } = 
 
 export const canvasUnfrozen = ({ reason = "manual" }: { reason?: FreezeReason } = {}) => {
   const event: CanvasUnfrozen = { type: "CanvasUnfrozen", reason, at: t };
+
+  return event;
+};
+
+export const canvasCompleted = ({ at = t }: { at?: number } = {}) => {
+  const event: CanvasCompleted = { type: "CanvasCompleted", at, resetAt: at + resetAfterMs };
 
   return event;
 };
