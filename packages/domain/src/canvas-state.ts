@@ -3,10 +3,10 @@ import type {
   CanvasCreated,
   CanvasEvent,
   CanvasFrozen,
+  CanvasUnfrozen,
   CellPainted,
   FreezeReason,
 } from "./events.ts";
-import { notImplemented } from "./not-implemented.ts";
 
 /**
  * What `decide` needs to enforce the rules; not a read model.
@@ -60,6 +60,14 @@ const frozenState = ({ state, event }: { state: CreatedCanvasState; event: Canva
   return frozen;
 };
 
+const unfrozenState = ({ state, event }: { state: CreatedCanvasState; event: CanvasUnfrozen }) => {
+  const { reason } = event;
+  const freezes = new Set([...state.freezes].filter((active) => active !== reason));
+  const unfrozen: CanvasState = { ...state, freezes };
+
+  return unfrozen;
+};
+
 export const evolve = ({ state, event }: { state: CanvasState; event: CanvasEvent }) => {
   switch (event.type) {
     case "CanvasCreated":
@@ -68,8 +76,10 @@ export const evolve = ({ state, event }: { state: CanvasState; event: CanvasEven
       return paintedState({ state: createdCanvas({ state, event }), event });
     case "CanvasFrozen":
       return frozenState({ state: createdCanvas({ state, event }), event });
+    case "CanvasUnfrozen":
+      return unfrozenState({ state: createdCanvas({ state, event }), event });
     default:
-      return notImplemented();
+      return event satisfies never;
   }
 };
 
