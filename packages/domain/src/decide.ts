@@ -1,7 +1,7 @@
 import type { CanvasState } from "./canvas-state.ts";
 import { cellKey } from "./cell.ts";
-import type { CanvasCommand, CreateCanvas, PaintCell } from "./commands.ts";
-import type { CanvasCreated, CanvasEvent, CellPainted } from "./events.ts";
+import type { CanvasCommand, CreateCanvas, FreezeCanvas, PaintCell } from "./commands.ts";
+import type { CanvasCreated, CanvasEvent, CanvasFrozen, CellPainted } from "./events.ts";
 import { notImplemented } from "./not-implemented.ts";
 
 export type Rejection =
@@ -52,9 +52,10 @@ const decidePaintCell = ({
   cooldownMs: number;
 }) => {
   if (state.status === "none") return rejected({ reason: "noCanvas" });
-  if (state.status === "frozen") return rejected({ reason: "canvasFrozen" });
 
-  const { templateCells, palette, lastPaintAtBySession } = state;
+  const { freezes, templateCells, palette, lastPaintAtBySession } = state;
+  if (freezes.size > 0) return rejected({ reason: "canvasFrozen" });
+
   const { sessionId, cell, color, at } = command;
   if (!templateCells.has(cellKey(cell))) return rejected({ reason: "cellOutsideCanvas" });
   if (!palette.has(color)) return rejected({ reason: "colorNotInPalette" });
@@ -65,6 +66,18 @@ const decidePaintCell = ({
 
   const painted: CellPainted = { type: "CellPainted", sessionId, cell, color, at };
   const decision = accepted([painted]);
+
+  return decision;
+};
+
+const decideFreezeCanvas = ({ state, command }: { state: CanvasState; command: FreezeCanvas }) => {
+  if (state.status === "none") return rejected({ reason: "noCanvas" });
+
+  const { reason, at } = command;
+  if (state.freezes.has(reason)) return accepted([]);
+
+  const frozen: CanvasFrozen = { type: "CanvasFrozen", reason, at };
+  const decision = accepted([frozen]);
 
   return decision;
 };
@@ -83,6 +96,8 @@ export const decide = ({
       return decideCreateCanvas({ state, command });
     case "PaintCell":
       return decidePaintCell({ state, command, cooldownMs });
+    case "FreezeCanvas":
+      return decideFreezeCanvas({ state, command });
     default:
       return notImplemented();
   }

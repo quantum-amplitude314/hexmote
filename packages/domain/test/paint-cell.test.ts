@@ -76,7 +76,7 @@ describe("Slice 2: Paint a cell", () => {
   });
 
   test("rejects painting on a frozen canvas", () => {
-    const decision = given([canvasCreated, canvasFrozen]).when(
+    const decision = given([canvasCreated, canvasFrozen()]).when(
       paintCell({ cell: cellA, color: red }),
     );
 

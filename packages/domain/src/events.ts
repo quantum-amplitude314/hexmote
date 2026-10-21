@@ -19,6 +19,6 @@ export type FreezeReason = "manual" | "budget";
 
 export type CanvasFrozen = { type: "CanvasFrozen"; reason: FreezeReason; at: number };
 
-export type CanvasUnfrozen = { type: "CanvasUnfrozen"; at: number };
+export type CanvasUnfrozen = { type: "CanvasUnfrozen"; reason: FreezeReason; at: number };
 
 export type CanvasEvent = CanvasCreated | CellPainted | CanvasFrozen | CanvasUnfrozen;

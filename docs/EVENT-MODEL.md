@@ -16,6 +16,7 @@ admin    ── UnfreezeCanvas ──▶ CanvasUnfrozen ──┘
 
 - Template: cells `A`, `B` red, cells `C`, `D` blue; `X` is not in the template
 - Sessions `s1`, `s2`; time `t`; cooldown 10 s
+- Freeze reasons `r1`, `r2`
 
 ## Slice 1: Create canvas
 
@@ -68,7 +69,7 @@ Given  CanvasCreated, CellPainted s1, A, red, t
 When   PaintCell s2, B, red, t + 5 s
 Then   CellPainted s2, B, red, t + 5 s
 
-Given  CanvasCreated, CanvasFrozen
+Given  CanvasCreated, CanvasFrozen r1
 When   PaintCell s1, A, red, t
 Then   rejected: canvas frozen
 ```
@@ -77,41 +78,55 @@ Then   rejected: canvas frozen
 
 `FreezeCanvas {reason, at}` → `CanvasFrozen {reason, at}`
 
+Freezes are holds that can overlap; each reason is frozen and lifted on its own.
+
 ```
 Given  CanvasCreated
-When   FreezeCanvas
-Then   CanvasFrozen
+When   FreezeCanvas r1
+Then   CanvasFrozen r1
 
-Given  CanvasCreated, CanvasFrozen
-When   FreezeCanvas
+Given  CanvasCreated, CanvasFrozen r1
+When   FreezeCanvas r1
 Then   no events
 
+Given  CanvasCreated, CanvasFrozen r2
+When   FreezeCanvas r1
+Then   CanvasFrozen r1
+
 Given  –
-When   FreezeCanvas
+When   FreezeCanvas r1
 Then   rejected: no canvas
 ```
 
 ## Slice 4: Unfreeze canvas
 
-`UnfreezeCanvas {at}` → `CanvasUnfrozen {at}`
+`UnfreezeCanvas {reason, at}` → `CanvasUnfrozen {reason, at}`
 
 ```
-Given  CanvasCreated, CanvasFrozen
-When   UnfreezeCanvas
-Then   CanvasUnfrozen
+Given  CanvasCreated, CanvasFrozen r1
+When   UnfreezeCanvas r1
+Then   CanvasUnfrozen r1
 
 Given  CanvasCreated
-When   UnfreezeCanvas
+When   UnfreezeCanvas r1
 Then   no events
 
+Given  CanvasCreated, CanvasFrozen r2
+When   UnfreezeCanvas r1
+Then   no events
+
+Given  CanvasCreated, CanvasFrozen r2, CanvasFrozen r1, CanvasUnfrozen r2
+When   PaintCell s1, A, red, t
+Then   rejected: canvas frozen
+
 Given  –
-When   UnfreezeCanvas
+When   UnfreezeCanvas r1
 Then   rejected: no canvas
 ```
 
 ## Slice 5: Canvas view
 
-Every cell's current colour, completion and whether the canvas is open.
+Every cell's current colour, completion, whether the canvas is open, and the active freeze reasons.
 
 ```
 Given  CanvasCreated
@@ -123,9 +138,12 @@ Then   A red, C red, completion 25 %
 Given  CanvasCreated, CellPainted A red, CellPainted A blue
 Then   A blue, completion 0 %   (last paint wins)
 
-Given  CanvasCreated, CanvasFrozen
+Given  CanvasCreated, CanvasFrozen r1
 Then   frozen
 
-Given  CanvasCreated, CanvasFrozen, CanvasUnfrozen
+Given  CanvasCreated, CanvasFrozen r1, CanvasUnfrozen r1
 Then   open
+
+Given  CanvasCreated, CanvasFrozen r2, CanvasFrozen r1, CanvasUnfrozen r2
+Then   frozen, active freezes: r1
 ```

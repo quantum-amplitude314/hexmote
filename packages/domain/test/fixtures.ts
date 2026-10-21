@@ -6,6 +6,7 @@ import type {
   CellPainted,
   CreateCanvas,
   FreezeCanvas,
+  FreezeReason,
   HexCodeColor,
   PaintCell,
   UnfreezeCanvas,
@@ -37,8 +38,17 @@ export const t = Date.UTC(2026, 9, 21, 12);
 export const cooldownMs = seconds(10);
 
 export const canvasCreated: CanvasCreated = { type: "CanvasCreated", palette, template, at: t };
-export const canvasFrozen: CanvasFrozen = { type: "CanvasFrozen", reason: "manual", at: t };
-export const canvasUnfrozen: CanvasUnfrozen = { type: "CanvasUnfrozen", at: t };
+export const canvasFrozen = ({ reason = "manual" }: { reason?: FreezeReason } = {}) => {
+  const event: CanvasFrozen = { type: "CanvasFrozen", reason, at: t };
+
+  return event;
+};
+
+export const canvasUnfrozen = ({ reason = "manual" }: { reason?: FreezeReason } = {}) => {
+  const event: CanvasUnfrozen = { type: "CanvasUnfrozen", reason, at: t };
+
+  return event;
+};
 
 export const cellPainted = ({
   cell,
@@ -57,8 +67,17 @@ export const cellPainted = ({
 };
 
 export const createCanvas: CreateCanvas = { type: "CreateCanvas", palette, template, at: t };
-export const freezeCanvas: FreezeCanvas = { type: "FreezeCanvas", reason: "manual", at: t };
-export const unfreezeCanvas: UnfreezeCanvas = { type: "UnfreezeCanvas", at: t };
+export const freezeCanvas = ({ reason = "manual" }: { reason?: FreezeReason } = {}) => {
+  const command: FreezeCanvas = { type: "FreezeCanvas", reason, at: t };
+
+  return command;
+};
+
+export const unfreezeCanvas = ({ reason = "manual" }: { reason?: FreezeReason } = {}) => {
+  const command: UnfreezeCanvas = { type: "UnfreezeCanvas", reason, at: t };
+
+  return command;
+};
 
 export const paintCell = ({
   cell,

@@ -26,6 +26,7 @@ describe("Slice 5: Canvas view", () => {
       ],
       completionPercent: 0,
       status: "open",
+      freezes: [],
     });
   });
 
@@ -61,14 +62,28 @@ describe("Slice 5: Canvas view", () => {
   });
 
   test("shows a frozen canvas", () => {
-    const view = given([canvasCreated, canvasFrozen]).view();
+    const view = given([canvasCreated, canvasFrozen()]).view();
 
     expect(view.status).toBe("frozen");
   });
 
   test("shows an unfrozen canvas as open", () => {
-    const view = given([canvasCreated, canvasFrozen, canvasUnfrozen]).view();
+    const view = given([canvasCreated, canvasFrozen(), canvasUnfrozen()]).view();
 
     expect(view.status).toBe("open");
+  });
+
+  test("stays frozen while another freeze is active", () => {
+    const history = [
+      canvasCreated,
+      canvasFrozen({ reason: "budget" }),
+      canvasFrozen({ reason: "manual" }),
+      canvasUnfrozen({ reason: "budget" }),
+    ];
+
+    const view = given(history).view();
+
+    expect(view.status).toBe("frozen");
+    expect(view.freezes).toEqual(["manual"]);
   });
 });

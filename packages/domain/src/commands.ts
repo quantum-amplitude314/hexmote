@@ -19,6 +19,6 @@ export type PaintCell = {
 
 export type FreezeCanvas = { type: "FreezeCanvas"; reason: FreezeReason; at: number };
 
-export type UnfreezeCanvas = { type: "UnfreezeCanvas"; at: number };
+export type UnfreezeCanvas = { type: "UnfreezeCanvas"; reason: FreezeReason; at: number };
 
 export type CanvasCommand = CreateCanvas | PaintCell | FreezeCanvas | UnfreezeCanvas;
