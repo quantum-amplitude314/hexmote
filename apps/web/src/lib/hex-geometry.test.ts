@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { gridBounds, hexCenter, hexCorners, type Point } from "./hex-geometry";
+import { gridBounds, hexCenter, hexCorners, type Point, percentPosition } from "./hex-geometry";
 
 const radius = 10;
 const hexWidth = Math.sqrt(3) * radius;
@@ -58,5 +58,15 @@ describe("gridBounds", () => {
     expect(bounds.minY).toBeCloseTo(-radius);
     expect(bounds.width).toBeCloseTo(2 * hexWidth);
     expect(bounds.height).toBeCloseTo(2 * radius);
+  });
+});
+
+describe("percentPosition", () => {
+  test("places a point at its percent of the bounds, for HTML laid over the grid", () => {
+    const bounds = { minX: -10, minY: -20, width: 40, height: 80 };
+
+    const position = percentPosition({ point: { x: 10, y: 0 }, bounds });
+
+    expect(position).toEqual({ left: 50, top: 25 });
   });
 });

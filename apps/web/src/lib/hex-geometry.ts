@@ -7,6 +7,7 @@ export type Bounds = { minX: number; minY: number; width: number; height: number
 type HexCenter = (input: { cell: Cell; radius: number }) => Point;
 type HexCorners = (input: { center: Point; radius: number }) => Point[];
 type GridBounds = (input: { cells: Cell[]; radius: number }) => Bounds;
+type PercentPosition = (input: { point: Point; bounds: Bounds }) => { left: number; top: number };
 
 // Pointy-top hexes, the same layout `packages/template` samples the emoji with.
 export const hexCenter: HexCenter = ({ cell: { axialQ, axialR }, radius }) => {
@@ -40,4 +41,13 @@ export const gridBounds: GridBounds = ({ cells, radius }) => {
   };
 
   return bounds;
+};
+
+export const percentPosition: PercentPosition = ({
+  point: { x, y },
+  bounds: { minX, minY, width, height },
+}) => {
+  const position = { left: ((x - minX) / width) * 100, top: ((y - minY) / height) * 100 };
+
+  return position;
 };

@@ -19,20 +19,22 @@ export function LiveCanvas() {
   const color = selectedColor ?? firstColor;
 
   return (
-    <section className="grid justify-items-center gap-3">
+    <section className="grid w-full justify-items-center gap-3">
       <OnlineBar you={you} online={online} connected={connected} />
       <CanvasProgress paintedPercent={paintedPercent} status={status} resetAt={resetAt} />
-      <div className="py-5">
+      <div className="grid w-full justify-items-center overflow-x-clip py-5">
         <HexGrid
           cells={cells}
           recentPaints={recentPaints}
           onCellClick={(cell) => paint({ cell, color })}
         />
       </div>
-      <ColorPalette palette={palette} selected={color} onSelect={setSelectedColor} />
-      <p className="text-sm" aria-live="polite">
-        {statusText}
-      </p>
+      <div className="sticky bottom-2 grid justify-items-center gap-2 rounded-xl border bg-background/90 p-2 shadow-lg backdrop-blur-sm">
+        <ColorPalette palette={palette} selected={color} onSelect={setSelectedColor} />
+        <p className="text-sm" aria-live="polite">
+          {statusText}
+        </p>
+      </div>
     </section>
   );
 }
