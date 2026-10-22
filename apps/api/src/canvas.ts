@@ -85,6 +85,7 @@ export class Canvas extends DurableObject<Env> {
     await this.#countAgainstBudget();
     if (await this.#isBudgetFrozen()) return budgetFreezeRefusal;
     await this.#wipe();
+    this.#broadcast({ message: snapshotOf(await this.getView()) });
     const deleted: DeleteResult = { status: "deleted" };
 
     return deleted;

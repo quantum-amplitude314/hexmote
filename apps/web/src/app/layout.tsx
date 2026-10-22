@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { QaCredit } from "@/components/qa-credit";
 import { getEnv } from "@/lib/env";
 import "./globals.css";
 
@@ -45,7 +46,12 @@ export const generateMetadata = async () => {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="flex min-h-dvh flex-col">
+        {children}
+        <footer className="mt-auto text-center text-xs text-muted-foreground">
+          <QaCredit />
+        </footer>
+      </body>
     </html>
   );
 }

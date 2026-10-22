@@ -42,7 +42,10 @@ const route = async ({
   token?: string;
   env?: WorkerEnv;
 }) => {
-  const headers: HeadersInit = token ? { "Cf-Access-Jwt-Assertion": token } : {};
+  const headers: HeadersInit = {
+    Origin: "https://hexmote.test",
+    ...(token ? { "Cf-Access-Jwt-Assertion": token } : {}),
+  };
   const request = new Request(`https://hexmote.test${path}`, { method: "POST", headers });
   const response = await handleRequest({ request, env, accessKeys, next });
   const routed = { status: response.status, body: await response.text() };

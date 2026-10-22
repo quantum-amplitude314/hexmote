@@ -20,7 +20,9 @@ const isAdminPath = (pathname: string) =>
 const isApiPath = (pathname: string) => pathname === "/live" || pathname.startsWith("/api/");
 
 export const handleRequest: HandleRequest = async ({ request, env, accessKeys, next }) => {
-  const { pathname } = new URL(request.url);
+  const { pathname, origin } = new URL(request.url);
+  const isForeignLive = pathname === "/live" && request.headers.get("Origin") !== origin;
+  if (isForeignLive) return new Response("Forbidden", { status: 403 });
   if (isApiPath(pathname)) return env.API.fetch(request);
   if (!isAdminPath(pathname)) return next(request);
   if (!(await hasAdminAccess({ request, env, accessKeys }))) {
