@@ -28,3 +28,14 @@ window is a second painter: both appear online, and each sees the other's paints
 
 `bun run preview` runs the web Worker itself on :3000, so `/api`, `/live` and `/admin/*` go through
 it to the API.
+
+## Deploy
+
+Once: `wrangler secret put` each name under `secrets.required` in both `wrangler.jsonc` files, and
+put the Turnstile sitekey in `apps/web/.env.production`.
+
+```sh
+bun run deploy   # tests and typecheck, then the API Worker, then the web Worker
+```
+
+Then create the canvas on `/admin`.

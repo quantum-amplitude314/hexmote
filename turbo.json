@@ -21,6 +21,14 @@
     "preview": {
       "cache": false,
       "persistent": true
+    },
+    "deploy": {
+      "dependsOn": ["test", "typecheck"],
+      "cache": false
+    },
+    "@hexmote/web#deploy": {
+      "dependsOn": ["test", "typecheck", "@hexmote/api#deploy"],
+      "cache": false
     }
   },
   "agentGuidance": false

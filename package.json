@@ -24,6 +24,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "preview": "turbo run preview",
+    "deploy": "turbo run deploy",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
