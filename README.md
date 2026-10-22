@@ -1,5 +1,7 @@
 # Hexmote
 
+![Hexmote: realtime collaborative canvas](docs/preview.webp)
+
 A shared hex canvas. Visitors paint one cell at a time to recreate a big emote together.
 A CQRS and Event Sourcing PoC Demo Project.
 
