@@ -7,7 +7,15 @@
   "preview_urls": false,
   "observability": { "enabled": true },
   "vars": { "COOLDOWN_MS": "10000", "RESET_AFTER_MS": "21600000" },
-  "secrets": { "required": ["SESSION_SIGNING_KEY", "TURNSTILE_SECRET_KEY"] },
+  "secrets": {
+    "required": [
+      "SESSION_SIGNING_KEY",
+      "TURNSTILE_SECRET_KEY",
+      "BUDGET_PER_DAY",
+      "BUDGET_PER_CYCLE",
+      "BILLING_CYCLE_DAY"
+    ]
+  },
   "durable_objects": {
     "bindings": [{ "name": "CANVAS", "class_name": "Canvas" }]
   },

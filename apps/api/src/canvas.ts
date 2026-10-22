@@ -9,20 +9,28 @@ import {
   type ResetResult,
 } from "@hexmote/contracts";
 import {
+  type BudgetLimits,
+  budgetGuard,
   type CanvasCommand,
   type CanvasConfig,
   type CanvasEvent,
   type CanvasView,
+  countedRequest,
+  emptyUsage,
   evolveCanvasView,
   replayCanvasView,
+  type Usage,
+  usageAt,
 } from "@hexmote/domain";
 import { liveMessageFor, snapshotOf } from "./live.ts";
 import { painterOf } from "./painter.ts";
-import { createSqliteEventStore } from "./sqlite-event-store.ts";
+import { createSqliteEventStore, deleteSqliteEvents } from "./sqlite-event-store.ts";
 
 const budgetFreezeRefusal: BudgetFreezeRefusal = { status: "refused", reason: "budgetFreeze" };
 
 const resetRetryMs = 60 * 60 * 1000;
+
+export const usageKey = "usage";
 
 /** Set by the API Worker from the session cookie, never taken from the browser. */
 export const sessionHeader = "X-Hexmote-Session";
@@ -36,6 +44,11 @@ export class Canvas extends DurableObject<Env> {
     cooldownMs: Number(this.env.COOLDOWN_MS),
     resetAfterMs: Number(this.env.RESET_AFTER_MS),
   };
+  #limits: BudgetLimits = {
+    perDay: Number(this.env.BUDGET_PER_DAY),
+    perCycle: Number(this.env.BUDGET_PER_CYCLE),
+    billingCycleDay: Number(this.env.BILLING_CYCLE_DAY),
+  };
   #view: CanvasView | null = null;
 
   constructor(ctx: DurableObjectState, env: Env) {
@@ -44,20 +57,9 @@ export class Canvas extends DurableObject<Env> {
   }
 
   async handleCommand(command: CanvasCommand) {
-    const decision = await handleCommand({
-      store: this.#store,
-      command,
-      config: this.#config,
-    });
-    if (decision.status === "accepted" && decision.events.length > 0) {
-      const view = await this.#viewAfter(decision.events);
-      for (const event of decision.events) {
-        this.#broadcast({ message: liveMessageFor({ event, view }) });
-        if (event.type === "CanvasCompleted") await this.ctx.storage.setAlarm(event.resetAt);
-      }
-    }
+    await this.#countAgainstBudget();
 
-    return decision;
+    return this.#handleCommand(command);
   }
 
   async getView() {
@@ -69,7 +71,18 @@ export class Canvas extends DurableObject<Env> {
     return this.#view;
   }
 
+  async getBudget() {
+    const { billingCycleDay } = this.#limits;
+    const budget = {
+      usage: usageAt({ usage: await this.#storedUsage(), at: Date.now(), billingCycleDay }),
+      limits: this.#limits,
+    };
+
+    return budget;
+  }
+
   async deleteCanvas() {
+    await this.#countAgainstBudget();
     if (await this.#isBudgetFrozen()) return budgetFreezeRefusal;
     await this.#wipe();
     const deleted: DeleteResult = { status: "deleted" };
@@ -78,30 +91,20 @@ export class Canvas extends DurableObject<Env> {
   }
 
   async resetCanvas() {
-    const {
-      events: [created],
-    } = await this.#store.read();
-    if (created?.type !== "CanvasCreated") {
-      const refused: ResetResult = { status: "refused", reason: "noCanvas" };
+    await this.#countAgainstBudget();
 
-      return refused;
-    }
-    if (await this.#isBudgetFrozen()) return budgetFreezeRefusal;
-    await this.#wipe();
-    const { palette, template } = created;
-    await this.handleCommand({ type: "CreateCanvas", palette, template, at: Date.now() });
-    const reset: ResetResult = { status: "reset" };
-
-    return reset;
+    return this.#reset();
   }
 
   override async alarm() {
-    const result = await this.resetCanvas();
+    await this.#countAgainstBudget();
+    const result = await this.#reset();
     const waitsForBudget = result.status === "refused" && result.reason === "budgetFreeze";
     if (waitsForBudget) await this.ctx.storage.setAlarm(Date.now() + resetRetryMs);
   }
 
   override async fetch(request: Request) {
+    await this.#countAgainstBudget();
     if (request.headers.get("Upgrade") !== "websocket") {
       return new Response("Expected a WebSocket upgrade", { status: 426 });
     }
@@ -125,6 +128,57 @@ export class Canvas extends DurableObject<Env> {
     this.#broadcastPresence(socket);
   }
 
+  async #handleCommand(command: CanvasCommand) {
+    const decision = await handleCommand({
+      store: this.#store,
+      command,
+      config: this.#config,
+    });
+    if (decision.status === "accepted" && decision.events.length > 0) {
+      const view = await this.#viewAfter(decision.events);
+      for (const event of decision.events) {
+        this.#broadcast({ message: liveMessageFor({ event, view }) });
+        if (event.type === "CanvasCompleted") await this.ctx.storage.setAlarm(event.resetAt);
+      }
+    }
+
+    return decision;
+  }
+
+  async #storedUsage() {
+    const usage = (await this.ctx.storage.get<Usage>(usageKey)) ?? emptyUsage;
+
+    return usage;
+  }
+
+  async #countAgainstBudget() {
+    const at = Date.now();
+    const { billingCycleDay } = this.#limits;
+    const usage = countedRequest({ usage: await this.#storedUsage(), at, billingCycleDay });
+    await this.ctx.storage.put(usageKey, usage);
+    const budgetFrozen = await this.#isBudgetFrozen();
+    const command = budgetGuard({ usage, limits: this.#limits, budgetFrozen, at });
+    if (command) await this.#handleCommand(command);
+  }
+
+  async #reset() {
+    const {
+      events: [created],
+    } = await this.#store.read();
+    if (created?.type !== "CanvasCreated") {
+      const refused: ResetResult = { status: "refused", reason: "noCanvas" };
+
+      return refused;
+    }
+    if (await this.#isBudgetFrozen()) return budgetFreezeRefusal;
+    await this.#wipe();
+    const { palette, template } = created;
+    await this.#handleCommand({ type: "CreateCanvas", palette, template, at: Date.now() });
+    const reset: ResetResult = { status: "reset" };
+
+    return reset;
+  }
+
   async #isBudgetFrozen() {
     const { freezes } = await this.getView();
 
@@ -132,8 +186,9 @@ export class Canvas extends DurableObject<Env> {
   }
 
   async #wipe() {
-    // deleteAll also drops the alarm and the events table; the new store creates the table again.
-    await this.ctx.storage.deleteAll();
+    // Not deleteAll: the usage stays, so a reset or delete never zeroes the budget.
+    deleteSqliteEvents(this.ctx.storage);
+    await this.ctx.storage.deleteAlarm();
     this.#store = createSqliteEventStore(this.ctx.storage);
     this.#view = null;
   }

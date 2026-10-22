@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { AdminCanvasStatus } from "@hexmote/contracts";
 import { canvasFrozen } from "@hexmote/domain/testing";
-import { adminResultText, adminStatusText } from "./admin-text";
+import { adminBudgetText, adminResultText, adminStatusText } from "./admin-text";
 
 const now = Date.UTC(2026, 9, 22, 12);
 const minute = 60 * 1000;
@@ -12,6 +12,7 @@ const openCanvas: AdminCanvasStatus = {
   paintedPercent: 12.3,
   freezes: [],
   resetAt: null,
+  budget: { dayCount: 12, perDay: 1000, cycleCount: 340, perCycle: 5000 },
 };
 
 describe("adminStatusText", () => {
@@ -46,6 +47,14 @@ describe("adminStatusText", () => {
     };
 
     expect(adminStatusText({ status, now })).toBe("Complete · new round in 12 min");
+  });
+});
+
+describe("adminBudgetText", () => {
+  test("shows the requests counted against both limits", () => {
+    expect(adminBudgetText(openCanvas.budget)).toBe(
+      "Requests today 12 / 1000 · this cycle 340 / 5000",
+    );
   });
 });
 

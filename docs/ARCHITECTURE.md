@@ -51,6 +51,8 @@ One canvas = one Durable Object = one event stream.
 - Heartbeat: `ping` every 25 s, answered by the runtime without waking the Canvas; after a drop or a
   missed pong the page reconnects (1 s, doubling to 30 s) and gets a fresh snapshot
 - Presence: from the open WebSockets, not from events, so it is never stored
+- Usage for the budget guard: counted per request in Durable Object storage, outside the stream, so
+  reset and delete keep it
 - Rounds: `CanvasCompleted` sets an alarm at `resetAt`; the alarm wipes the stream and records the
   old `CanvasCreated` again; during a budget freeze it retries hourly
 

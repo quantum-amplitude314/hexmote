@@ -1,6 +1,6 @@
 "use client";
 
-import { adminStatusText } from "@/lib/admin-text";
+import { adminBudgetText, adminStatusText } from "@/lib/admin-text";
 import { useAdmin } from "@/lib/use-admin";
 import { useNow } from "@/lib/use-now";
 import { ConfirmButton } from "./confirm-button";
@@ -14,7 +14,12 @@ export function AdminPanel() {
   return (
     <section className="grid w-full max-w-md gap-4">
       <div className="flex items-center justify-between gap-3">
-        <p aria-live="polite">{statusText}</p>
+        <div className="grid gap-1">
+          <p aria-live="polite">{statusText}</p>
+          {canvas && (
+            <p className="text-sm text-muted-foreground">{adminBudgetText(canvas.budget)}</p>
+          )}
+        </div>
         <Button variant="outline" size="sm" disabled={running} onClick={() => void refresh()}>
           Refresh
         </Button>

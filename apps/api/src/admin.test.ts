@@ -5,7 +5,6 @@ import {
   canvasCreated,
   canvasFrozen,
   cellA,
-  freezeCanvas,
   paintCell,
   palette,
   red,
@@ -14,6 +13,7 @@ import {
 import { describe, expect, test } from "vitest";
 import { handleAdminRequest } from "./admin.ts";
 import { completeCanvas } from "./testing/complete-canvas.ts";
+import { freezeForBudget } from "./testing/usage.ts";
 
 const emote = { palette, template };
 
@@ -84,7 +84,7 @@ describe("Admin routes", () => {
   test("leaves the budget freeze in place when unfreezing", async () => {
     const { canvas, send } = adminOfNewCanvas();
     await send(createCanvasRequest);
-    await canvas.handleCommand(freezeCanvas({ reason: "budget" }));
+    await freezeForBudget(canvas);
     await send(freezeRequest);
 
     await send(unfreezeRequest);
@@ -117,7 +117,7 @@ describe("Admin routes", () => {
   test("refuses to delete while the budget freeze is active", async () => {
     const { canvas, send } = adminOfNewCanvas();
     await send(createCanvasRequest);
-    await canvas.handleCommand(freezeCanvas({ reason: "budget" }));
+    await freezeForBudget(canvas);
 
     const response = await send(deleteCanvasRequest);
 
@@ -143,7 +143,7 @@ describe("Admin routes", () => {
     const { canvas, send } = adminOfNewCanvas();
     await send(createCanvasRequest);
     await completeCanvas({ canvas });
-    await canvas.handleCommand(freezeCanvas({ reason: "budget" }));
+    await freezeForBudget(canvas);
 
     const response = await send(resetRequest);
 
@@ -170,7 +170,23 @@ describe("Admin routes", () => {
       paintedPercent: 0,
       freezes: [],
       resetAt: null,
+      budget: {
+        dayCount: 0,
+        perDay: Number(env.BUDGET_PER_DAY),
+        cycleCount: 0,
+        perCycle: Number(env.BUDGET_PER_CYCLE),
+      },
     });
+  });
+
+  test("reports the requests counted against the budget", async () => {
+    const { send } = adminOfNewCanvas();
+    await send(createCanvasRequest);
+    await send(freezeRequest);
+
+    const response = await send(statusRequest);
+
+    expect(await response.json()).toMatchObject({ budget: { dayCount: 2, cycleCount: 2 } });
   });
 
   test("reports the status of the canvas", async () => {
@@ -192,7 +208,7 @@ describe("Admin routes", () => {
   test("reports why the canvas is frozen, budget included", async () => {
     const { canvas, send } = adminOfNewCanvas();
     await send(createCanvasRequest);
-    await canvas.handleCommand(freezeCanvas({ reason: "budget" }));
+    await freezeForBudget(canvas);
     await send(freezeRequest);
 
     const response = await send(statusRequest);

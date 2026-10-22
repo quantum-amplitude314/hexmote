@@ -1,4 +1,9 @@
-import type { AdminCanvasStatus, AdminResult, BudgetFreezeRefusal } from "@hexmote/contracts";
+import type {
+  AdminBudget,
+  AdminCanvasStatus,
+  AdminResult,
+  BudgetFreezeRefusal,
+} from "@hexmote/contracts";
 import type { FreezeReason, Rejection } from "@hexmote/domain";
 import { progressLabel } from "./progress-label";
 
@@ -43,6 +48,9 @@ export const adminStatusText = ({ status, now }: { status: AdminCanvasStatus; no
 
   return text;
 };
+
+export const adminBudgetText = ({ dayCount, perDay, cycleCount, perCycle }: AdminBudget) =>
+  `Requests today ${dayCount} / ${perDay} · this cycle ${cycleCount} / ${perCycle}`;
 
 export const adminResultText = ({
   command,

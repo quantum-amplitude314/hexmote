@@ -1,4 +1,5 @@
 export type {
+  AdminBudget,
   AdminCanvasStatus,
   AdminResult,
   BudgetFreezeRefusal,

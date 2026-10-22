@@ -5,3 +5,7 @@ RESET_AFTER_MS=60000
 SESSION_SIGNING_KEY=local-signing-key-change-me
 # Cloudflare's test secret: every token passes
 TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+# Budget guard, local values: requests per UTC day and per billing cycle, and the cycle's first day
+BUDGET_PER_DAY=5000
+BUDGET_PER_CYCLE=50000
+BILLING_CYCLE_DAY=1

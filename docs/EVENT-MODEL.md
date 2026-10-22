@@ -11,6 +11,7 @@ visitor  ── PaintCell      ──▶ CellPainted     ──┤
                                CanvasCompleted ──┼──▶ Canvas view ──▶ canvas page, pushed live
 admin    ── FreezeCanvas   ──▶ CanvasFrozen    ──┤
 admin    ── UnfreezeCanvas ──▶ CanvasUnfrozen  ──┘
+guard    ── FreezeCanvas / UnfreezeCanvas {reason: "budget"}
 ```
 
 ## Rules
@@ -22,7 +23,8 @@ admin    ── UnfreezeCanvas ──▶ CanvasUnfrozen  ──┘
   canvas takes no paints
 - A new round at `resetAt`, or on admin reset: the stream is wiped and `CanvasCreated` recorded
   again with the same emote; it waits while the budget freeze is active
-- Freezes are holds that can overlap: each reason is frozen and lifted on its own
+- Freezes are holds that can overlap: each reason is frozen and lifted on its own; only the guard
+  freezes and lifts `budget`
 - `sessionId` and `at` are set by the server, never by the client
 - Deleting a canvas is not a command: it wipes the stream, so `CreateCanvas` can start over
 
@@ -35,6 +37,7 @@ admin    ── UnfreezeCanvas ──▶ CanvasUnfrozen  ──┘
 | 3 Freeze | `FreezeCanvas` → `CanvasFrozen` | no canvas; a reason already active gives no event |
 | 4 Unfreeze | `UnfreezeCanvas` → `CanvasUnfrozen` | no canvas; a reason not active gives no event |
 | 5 Canvas view | all events → `CanvasView` | – |
+| 6 Budget guard | automation: request counts past a limit → `FreezeCanvas {budget}`, back under → `UnfreezeCanvas {budget}` | – |
 
 ## Canvas view
 

@@ -1,5 +1,5 @@
 import type { AdminCanvasStatus, AdminResult } from "@hexmote/contracts";
-import type { CanvasView, CreateCanvas } from "@hexmote/domain";
+import type { BudgetLimits, CanvasView, CreateCanvas, Usage } from "@hexmote/domain";
 import type { Canvas } from "./canvas.ts";
 
 type HandleAdminRequest = (input: {
@@ -13,13 +13,23 @@ const resultResponse = (result: AdminResult) =>
     status: result.status === "rejected" || result.status === "refused" ? 409 : 200,
   });
 
-const adminStatusOf = ({ cells, status, paintedPercent, freezes, resetAt }: CanvasView) => {
+const adminStatusOf = ({
+  view: { cells, status, paintedPercent, freezes, resetAt },
+  budget: {
+    usage: { dayCount, cycleCount },
+    limits: { perDay, perCycle },
+  },
+}: {
+  view: CanvasView;
+  budget: { usage: Usage; limits: BudgetLimits };
+}) => {
   const adminStatus: AdminCanvasStatus = {
     exists: cells.length > 0,
     status,
     paintedPercent,
     freezes,
     resetAt,
+    budget: { dayCount, perDay, cycleCount, perCycle },
   };
 
   return adminStatus;
@@ -30,7 +40,9 @@ export const handleAdminRequest: HandleAdminRequest = async ({ request, canvas, 
   const at = Date.now();
   switch (`${request.method} ${pathname}`) {
     case "GET /admin/canvas":
-      return Response.json(adminStatusOf(await canvas.getView()));
+      return Response.json(
+        adminStatusOf({ view: await canvas.getView(), budget: await canvas.getBudget() }),
+      );
     case "POST /admin/canvas":
       return resultResponse(await canvas.handleCommand({ type: "CreateCanvas", ...emote, at }));
     case "POST /admin/freeze":

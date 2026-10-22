@@ -51,3 +51,7 @@ export const createSqliteEventStore: CreateSqliteEventStore = (storage) => {
 
   return store;
 };
+
+export const deleteSqliteEvents = (storage: DurableObjectStorage) => {
+  storage.sql.exec("DROP TABLE IF EXISTS events");
+};

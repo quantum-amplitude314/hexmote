@@ -20,6 +20,14 @@ export type {
 } from "./canvas/events.ts";
 export { decide } from "./decide.ts";
 export {
+  type BudgetLimits,
+  budgetGuard,
+  countedRequest,
+  emptyUsage,
+  type Usage,
+  usageAt,
+} from "./slices/budget-guard/budget-guard.ts";
+export {
   type CanvasView,
   type CanvasViewCell,
   emptyCanvasView,

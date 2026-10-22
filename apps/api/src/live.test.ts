@@ -7,7 +7,6 @@ import {
   cellA,
   cellOutside,
   createCanvas,
-  freezeCanvas,
   paintCell,
   red,
   resetAfterMs,
@@ -18,6 +17,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import { painterOf } from "./painter.ts";
 import { completeCanvas } from "./testing/complete-canvas.ts";
 import { connectLive } from "./testing/live-client.ts";
+import { freezeForBudget } from "./testing/usage.ts";
 
 const publicViewOf = (events: CanvasEvent[]) => {
   const { freezes: _freezes, ...view } = replayCanvasView(events);
@@ -145,7 +145,7 @@ describe("Canvas live updates", () => {
     const canvas = await createdCanvas();
     const client = await connectPastGreeting({ canvas });
 
-    await canvas.handleCommand(freezeCanvas({ reason: "budget" }));
+    await freezeForBudget(canvas);
 
     expect(await client.nextMessage()).toEqual({ type: "status", status: "frozen", resetAt: null });
   });
