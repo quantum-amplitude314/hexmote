@@ -48,7 +48,8 @@ One canvas = one Durable Object = one event stream.
 - `/live`: hibernatable WebSockets; on connect a snapshot and a welcome with the viewer's painter
   name, then one message per event; session ids and freeze reasons stay inside
 - Heartbeat: `ping` every 25 s, answered by the runtime without waking the Canvas; after a drop or a
-  missed pong the page reconnects (1 s, doubling to 30 s) and gets a fresh snapshot
+  missed pong the page reconnects (1 s, doubling to 30 s) and gets a fresh snapshot; a socket refused
+  before it opens checks the session again, and without one Turnstile runs again
 - Presence: from the open WebSockets, not from events, so it is never stored
 - Usage for the budget guard: counted per request in Durable Object storage, outside the stream, so
   reset and delete keep it

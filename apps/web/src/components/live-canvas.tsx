@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useLiveView } from "@/lib/use-live-view";
 import { usePaint } from "@/lib/use-paint";
 import { CanvasProgress } from "./canvas-progress";
 import { ColorPalette } from "./color-palette";
 import { HexGrid } from "./hex-grid";
 import { OnlineBar } from "./online-bar";
+import { RecheckSession } from "./session-gate";
 
 export function LiveCanvas() {
-  const { view, you, online, recentPaints, connected } = useLiveView();
+  const recheckSession = useContext(RecheckSession);
+  const { view, you, online, recentPaints, connected } = useLiveView({
+    onRefused: recheckSession,
+  });
   const { paint, statusText } = usePaint();
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   if (!view) return <p>Connecting…</p>;

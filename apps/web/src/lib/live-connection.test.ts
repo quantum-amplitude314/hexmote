@@ -43,8 +43,9 @@ const realWebSocket = globalThis.WebSocket;
 const openConnection = () => {
   const onMessage = mock();
   const onDisconnect = mock();
-  const connection = openLiveConnection({ url, onMessage, onDisconnect });
-  const opened = { connection, onMessage, onDisconnect };
+  const onRefused = mock();
+  const connection = openLiveConnection({ url, onMessage, onDisconnect, onRefused });
+  const opened = { connection, onMessage, onDisconnect, onRefused };
 
   return opened;
 };

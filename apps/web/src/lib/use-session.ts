@@ -31,7 +31,16 @@ export const useSession = () => {
     }
   }, []);
   const fail = useCallback(() => setSession({ status: "failed" }), []);
-  const sessionGate = { session, startSession, fail };
+  // A browser cannot read why a WebSocket upgrade failed, so a refused /live asks again.
+  const recheck = useCallback(() => {
+    apiClient.session
+      .get()
+      .then(({ you }) => {
+        if (!you) setSession({ status: "challenge" });
+      })
+      .catch(() => undefined);
+  }, []);
+  const sessionGate = { session, startSession, fail, recheck };
 
   return sessionGate;
 };

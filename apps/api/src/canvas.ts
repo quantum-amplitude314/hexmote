@@ -29,10 +29,15 @@ import { createSqliteEventStore, deleteSqliteEvents } from "./sqlite-event-store
 const budgetFreezeRefusal: BudgetFreezeRefusal = { status: "refused", reason: "budgetFreeze" };
 
 const resetRetryMs = 60 * 60 * 1000;
+const maxViewers = 100;
+const maxTabsPerSession = 5;
 
 export const usageKey = "usage";
 
 /** Set by the API Worker from the session cookie, never taken from the browser. */
+const sessionIdOf = (socket: WebSocket) =>
+  (socket.deserializeAttachment() as ViewerAttachment).sessionId;
+
 export const sessionHeader = "X-Hexmote-Session";
 
 type ViewerAttachment = { sessionId: string };
@@ -110,6 +115,12 @@ export class Canvas extends DurableObject<Env> {
       return new Response("Expected a WebSocket upgrade", { status: 426 });
     }
     const sessionId = request.headers.get(sessionHeader) ?? crypto.randomUUID();
+    const open = this.#openSockets();
+    if (open.length >= maxViewers) return new Response("The canvas is full", { status: 503 });
+    const sameSession = open.filter((socket) => sessionIdOf(socket) === sessionId);
+    if (sameSession.length >= maxTabsPerSession) {
+      return new Response("Too many tabs", { status: 429 });
+    }
     const { 0: client, 1: server } = new WebSocketPair();
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({ sessionId } satisfies ViewerAttachment);
@@ -221,11 +232,7 @@ export class Canvas extends DurableObject<Env> {
   }
 
   #broadcastPresence(leaving?: WebSocket) {
-    const sessionIds = new Set(
-      this.#openSockets(leaving).map(
-        (socket) => (socket.deserializeAttachment() as ViewerAttachment).sessionId,
-      ),
-    );
+    const sessionIds = new Set(this.#openSockets(leaving).map(sessionIdOf));
     const online = [...sessionIds]
       .map(painterOf)
       .sort((first, second) => first.name.localeCompare(second.name));

@@ -8,7 +8,7 @@ const sameOriginLiveUrl = () => {
   return `${protocol}//${location.host}/live`;
 };
 
-export const useLiveView = () => {
+export const useLiveView = ({ onRefused }: { onRefused: () => void }) => {
   const [state, dispatch] = useReducer(
     (current: LiveState, update: LiveUpdate) => applyLiveUpdate({ state: current, update }),
     emptyLiveState,
@@ -18,10 +18,11 @@ export const useLiveView = () => {
       url: process.env.NEXT_PUBLIC_LIVE_URL ?? sameOriginLiveUrl(),
       onMessage: dispatch,
       onDisconnect: () => dispatch({ type: "disconnected" }),
+      onRefused,
     });
 
     return () => connection.close();
-  }, []);
+  }, [onRefused]);
 
   return state;
 };
