@@ -4,7 +4,6 @@ A shared hex canvas. Visitors paint one cell at a time to recreate a big emote t
 A CQRS and Event Sourcing PoC Demo Project.
 
 https://hexmote.quantum-amplitude.tech
-
 - [Event model](docs/EVENT-MODEL.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Glossary](docs/GLOSSARY.md)
@@ -15,7 +14,7 @@ https://hexmote.quantum-amplitude.tech
 bun install
 cp apps/api/.dev.vars.example apps/api/.dev.vars     # once
 cp apps/web/.env.example apps/web/.env.development   # once
-cp apps/web/wrangler.example.jsonc apps/web/wrangler.jsonc   # once, set your domain
+cp apps/web/wrangler.example.jsonc apps/web/wrangler.jsonc   # once, set routes and WEB_ORIGIN
 bun run dev                                          # API on :8787, web on :3000
 ```
 
@@ -28,6 +27,13 @@ window is a second painter: both appear online, and each sees the other's paints
 
 `bun run preview` runs the web Worker itself on :3000, so `/api`, `/live` and `/admin/*` go through
 it to the API.
+
+## Share metadata
+
+Icons and the share image are committed in `apps/web/public/`. Metadata, `robots.txt` and
+`sitemap.xml` are prerendered from the web Worker's `WEB_ORIGIN`: the site URL in the default
+Wrangler config, localhost in `env.preview`. Rebuild after changing it. The Worker build copies
+robots and sitemap into static assets so they are served without running the Worker.
 
 ## Deploy
 

@@ -5,10 +5,11 @@
   "type": "module",
   "packageManager": "bun@1.4.2",
   "scripts": {
-    "dev": "next dev",
+    "dev": "NEXT_DEV_WRANGLER_ENV=preview next dev",
     "build": "next build",
-    "preview": "opennextjs-cloudflare build --env preview && opennextjs-cloudflare preview --env preview --port 3000",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "build:worker": "./scripts/build-worker.sh",
+    "preview": "NEXT_DEV_WRANGLER_ENV=preview bun run build:worker --env preview && opennextjs-cloudflare preview --env preview --port 3000",
+    "deploy": "bun run build:worker && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "typecheck": "bun run cf-typegen && next typegen && tsc --noEmit",
     "test": "bun test src"

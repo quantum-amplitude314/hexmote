@@ -8,6 +8,7 @@ coverage/
 
 # private
 work-docs/
+packages/maintain/
 .ignore
 
 # agent files

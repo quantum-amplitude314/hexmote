@@ -2,13 +2,13 @@
 
 ## Stack
 
-| Layer | Choice |
-|---|---|
-| Monorepo | Bun workspaces, Turbo, Biome, tsc |
-| Web | Next.js on Cloudflare Workers through OpenNext |
-| API | Hono + oRPC contract |
-| Canvas | One SQLite-backed Durable Object per canvas |
-| Bot protection | Turnstile |
+| Layer          | Choice                                         |
+| -------------- | ---------------------------------------------- |
+| Monorepo       | Bun workspaces, Turbo, Biome, tsc              |
+| Web            | Next.js on Cloudflare Workers through OpenNext |
+| API            | Hono + oRPC contract                           |
+| Canvas         | One SQLite-backed Durable Object per canvas    |
+| Bot protection | Turnstile                                      |
 
 ## Flow
 
@@ -28,21 +28,20 @@ Session: `GET /api/session` says who you are; without a session, Turnstile runs 
 
 ## Layers
 
-| Package | Role |
-|---|---|
-| `packages/domain` | core: deciders and views, pure; laid out by slice, tests next to the code |
-| `packages/application` | `handleCommand` and the `EventStore` port |
-| `packages/template` | build time: emoji PNG → template cells and palette |
-| `packages/contracts` | shared by api and web: live messages, the oRPC contract with Zod schemas |
-| `apps/api` | adapters: Canvas Durable Object, SQLite event store; Hono routes `/live`, `/admin`, `/api` |
-| `apps/web` | UI: Next.js with shadcn; paint on the live hex grid on `/`, run admin commands on `/admin`; `worker.ts` sends `/api`, `/live` and `/admin/*` to the API |
+| Package                | Role                                                                                                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/domain`      | core: deciders and views, pure; laid out by slice, tests next to the code                                                                               |
+| `packages/application` | `handleCommand` and the `EventStore` port                                                                                                               |
+| `packages/template`    | build time: emoji PNG → template cells and palette                                                                                                      |
+| `packages/contracts`   | shared by api and web: live messages, the oRPC contract with Zod schemas                                                                                |
+| `apps/api`             | adapters: Canvas Durable Object, SQLite event store; Hono routes `/live`, `/admin`, `/api`                                                              |
+| `apps/web`             | UI: Next.js with shadcn; paint on the live hex grid on `/`, run admin commands on `/admin`; `worker.ts` sends `/api`, `/live` and `/admin/*` to the API |
 
 Dependencies point inward: api → application → domain.
 
 ## Canvas Durable Object
 
 One canvas = one Durable Object = one event stream.
-
 - Commands: read the stream, replay, decide, append at `expectedVersion` in one SQLite transaction
 - No locks or deadlocks: the Durable Object runs one request at a time; `expectedVersion` is the backstop
 - Read model: `CanvasView` in memory, updated right after each append, so never behind the stream
@@ -61,6 +60,12 @@ One canvas = one Durable Object = one event stream.
 `bun test` for domain, application, template and the web's pure modules (fake timers for the live
 connection); Vitest in workerd (`@cloudflare/vitest-plugin`) for the api, against the real Durable
 Object. Components are checked in the browser.
+
+## Share metadata
+
+Next.js prerenders the page metadata, robots and sitemap using `WEB_ORIGIN` from Wrangler through
+OpenNext's async context. The Worker build copies robots and sitemap into its static assets,
+alongside the icons and share image from `apps/web/public/`.
 
 ## Template
 

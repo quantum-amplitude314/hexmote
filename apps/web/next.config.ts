@@ -28,4 +28,4 @@ const nextConfig: NextConfig = {
 
 export default nextConfig;
 
-initOpenNextCloudflareForDev({ environment: "preview" });
+initOpenNextCloudflareForDev();
