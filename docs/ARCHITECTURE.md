@@ -70,6 +70,6 @@ alongside the icons and share image from `apps/web/public/`.
 ## Template
 
 😀 rendered locally from the Noto Color Emoji font to `packages/template/source/`. The template
-samples the PNG at each hex centre: transparent centres are left out, the rest take the nearest
-palette colour (the 16 colours of r/place 2017). `bun run generate` in `packages/template` writes
+samples the PNG at each hex centre: transparent centres are left out, the rest take the palette
+colour nearest by eye, measured in OKLab (the 16 colours of r/place 2017). `bun run generate` in `packages/template` writes
 the JSON, which is committed.
