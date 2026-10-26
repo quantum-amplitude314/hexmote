@@ -30,14 +30,14 @@ guard    ── FreezeCanvas / UnfreezeCanvas {reason: "budget"}
 
 ## Slices
 
-| Slice | Command → event | Rejected when |
-|---|---|---|
-| 1 Create canvas | `CreateCanvas` → `CanvasCreated` | canvas exists; template colour not in the palette |
-| 2 Paint a cell | `PaintCell` → `CellPainted`, + `CanvasCompleted` on the last blank cell | no canvas; frozen; completed; cell not in the template; colour not in the palette; cooldown |
-| 3 Freeze | `FreezeCanvas` → `CanvasFrozen` | no canvas; a reason already active gives no event |
-| 4 Unfreeze | `UnfreezeCanvas` → `CanvasUnfrozen` | no canvas; a reason not active gives no event |
-| 5 Canvas view | all events → `CanvasView` | – |
-| 6 Budget guard | automation: request counts past a limit → `FreezeCanvas {budget}`, back under → `UnfreezeCanvas {budget}` | – |
+| Slice           | Command → event                                                                                           | Rejected when                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| 1 Create canvas | `CreateCanvas` → `CanvasCreated`                                                                          | canvas exists; template colour not in the palette                                           |
+| 2 Paint a cell  | `PaintCell` → `CellPainted`, + `CanvasCompleted` on the last blank cell                                   | no canvas; frozen; completed; cell not in the template; colour not in the palette; cooldown |
+| 3 Freeze        | `FreezeCanvas` → `CanvasFrozen`                                                                           | no canvas; a reason already active gives no event                                           |
+| 4 Unfreeze      | `UnfreezeCanvas` → `CanvasUnfrozen`                                                                       | no canvas; a reason not active gives no event                                               |
+| 5 Canvas view   | all events → `CanvasView`                                                                                 | –                                                                                           |
+| 6 Budget guard  | automation: request counts past a limit → `FreezeCanvas {budget}`, back under → `UnfreezeCanvas {budget}` | –                                                                                           |
 
 ## Canvas view
 
